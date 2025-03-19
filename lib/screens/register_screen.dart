@@ -42,15 +42,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
         return;
       }
 
-      final authController = Provider.of<AuthController>(context, listen: false);
-      
+      final authController =
+          Provider.of<AuthController>(context, listen: false);
+
       try {
         final success = await authController.register(
           _usernameController.text,
           _emailController.text,
           _passwordController.text,
         );
-        
+
         if (success && mounted) {
           Navigator.of(context).pushReplacementNamed('/home');
         }
@@ -69,7 +70,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Widget build(BuildContext context) {
     final authController = Provider.of<AuthController>(context);
     final size = MediaQuery.of(context).size;
-    
+
     return Scaffold(
       backgroundColor: AppTheme.backgroundLightColor,
       body: SingleChildScrollView(
@@ -100,7 +101,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
               ),
             ),
-            
+
             // Основное содержимое
             Container(
               width: size.width,
@@ -126,41 +127,62 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         ),
                       ],
                     ),
-                    child: const Icon(
-                      Icons.monitor_heart_rounded,
-                      size: 50,
-                      color: AppTheme.primaryColor,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(20),
+                      child: Image.asset(
+                        'assets/images/LOGO1024x1024.png',
+                        width: 50,
+                        height: 50,
+                      ),
                     ),
-                  ).animate().scale(duration: 600.ms, curve: Curves.easeOutBack),
-                  
+                  )
+                      .animate()
+                      .scale(duration: 600.ms, curve: Curves.easeOutBack),
+
                   const SizedBox(height: 24),
-                  
+
                   Text(
                     'Создание аккаунта',
                     style: AppTheme.headingStyle.copyWith(
                       fontSize: 28,
                     ),
                   ).animate().fade(duration: 400.ms).slideY(
-                    begin: 0.2,
-                    duration: 600.ms,
-                    curve: Curves.easeOutQuart,
-                  ),
-                  
+                        begin: 0.2,
+                        duration: 600.ms,
+                        curve: Curves.easeOutQuart,
+                      ),
+
                   const SizedBox(height: 8),
-                  
+
+                  Text(
+                    'with MTC',
+                    style: TextStyle(
+                      color: AppTheme.textLightColor,
+                      fontFamily: 'Baloo2',
+                      fontSize: 18,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ).animate().fade(delay: 100.ms, duration: 400.ms).slideY(
+                        begin: 0.2,
+                        duration: 600.ms,
+                        curve: Curves.easeOutQuart,
+                      ),
+
+                  const SizedBox(height: 8),
+
                   Text(
                     'Заполните данные для регистрации',
                     style: AppTheme.captionStyle.copyWith(
                       fontSize: 16,
                     ),
                   ).animate(delay: 200.ms).fade(duration: 400.ms).slideY(
-                    begin: 0.2,
-                    duration: 600.ms,
-                    curve: Curves.easeOutQuart,
-                  ),
-                  
+                        begin: 0.2,
+                        duration: 600.ms,
+                        curve: Curves.easeOutQuart,
+                      ),
+
                   const SizedBox(height: 32),
-                  
+
                   // Форма регистрации
                   GlassCard(
                     hasShadow: true,
@@ -182,9 +204,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               return null;
                             },
                           ),
-                          
                           const SizedBox(height: 16),
-                          
                           TextFormField(
                             controller: _emailController,
                             decoration: const InputDecoration(
@@ -196,15 +216,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               if (value == null || value.isEmpty) {
                                 return 'Пожалуйста, введите email';
                               }
-                              if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
+                              if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
+                                  .hasMatch(value)) {
                                 return 'Пожалуйста, введите корректный email';
                               }
                               return null;
                             },
                           ),
-                          
                           const SizedBox(height: 16),
-                          
                           TextFormField(
                             controller: _passwordController,
                             decoration: InputDecoration(
@@ -212,7 +231,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               prefixIcon: const Icon(Icons.lock_outline),
                               suffixIcon: IconButton(
                                 icon: Icon(
-                                  _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                                  _obscurePassword
+                                      ? Icons.visibility_off
+                                      : Icons.visibility,
                                 ),
                                 onPressed: () {
                                   setState(() {
@@ -232,9 +253,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               return null;
                             },
                           ),
-                          
                           const SizedBox(height: 16),
-                          
                           TextFormField(
                             controller: _confirmPasswordController,
                             decoration: InputDecoration(
@@ -242,11 +261,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               prefixIcon: const Icon(Icons.lock_outline),
                               suffixIcon: IconButton(
                                 icon: Icon(
-                                  _obscureConfirmPassword ? Icons.visibility_off : Icons.visibility,
+                                  _obscureConfirmPassword
+                                      ? Icons.visibility_off
+                                      : Icons.visibility,
                                 ),
                                 onPressed: () {
                                   setState(() {
-                                    _obscureConfirmPassword = !_obscureConfirmPassword;
+                                    _obscureConfirmPassword =
+                                        !_obscureConfirmPassword;
                                   });
                                 },
                               ),
@@ -262,13 +284,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               return null;
                             },
                           ),
-                          
                           const SizedBox(height: 24),
-                          
                           SizedBox(
                             height: 50,
                             child: ElevatedButton(
-                              onPressed: authController.isLoading ? null : _register,
+                              onPressed:
+                                  authController.isLoading ? null : _register,
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: AppTheme.primaryColor,
                                 foregroundColor: Colors.white,
@@ -298,9 +319,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ),
                     ),
                   ).animate(delay: 400.ms).fade(duration: 600.ms),
-                  
+
                   const SizedBox(height: 24),
-                  
+
                   // Кнопка перехода к входу
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -333,4 +354,4 @@ class _RegisterScreenState extends State<RegisterScreen> {
       ),
     );
   }
-} 
+}

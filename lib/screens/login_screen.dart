@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:ui';
 import 'package:healarm/controllers/auth_controller.dart';
 import 'package:healarm/theme/app_theme.dart';
 import 'package:healarm/widgets/glass_card.dart';
@@ -27,14 +28,15 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _login() async {
     if (_formKey.currentState!.validate()) {
-      final authController = Provider.of<AuthController>(context, listen: false);
-      
+      final authController =
+          Provider.of<AuthController>(context, listen: false);
+
       try {
         final success = await authController.login(
-          _emailController.text, 
+          _emailController.text,
           _passwordController.text,
         );
-        
+
         if (success && mounted) {
           Navigator.of(context).pushReplacementNamed('/home');
         }
@@ -53,38 +55,14 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     final authController = Provider.of<AuthController>(context);
     final size = MediaQuery.of(context).size;
-    
+
     return Scaffold(
       backgroundColor: AppTheme.backgroundLightColor,
       body: SingleChildScrollView(
         child: Stack(
           children: [
             // Декоративные элементы фона
-            Positioned(
-              top: -100,
-              right: -100,
-              child: Container(
-                width: 300,
-                height: 300,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: AppTheme.primaryColor.withOpacity(0.1),
-                ),
-              ),
-            ),
-            Positioned(
-              bottom: -80,
-              left: -80,
-              child: Container(
-                width: 200,
-                height: 200,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: AppTheme.accentColor.withOpacity(0.1),
-                ),
-              ),
-            ),
-            
+
             // Основное содержимое
             Container(
               width: size.width,
@@ -110,41 +88,62 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ],
                     ),
-                    child: const Icon(
-                      Icons.monitor_heart_rounded,
-                      size: 50,
-                      color: AppTheme.primaryColor,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(20),
+                      child: Image.asset(
+                        'assets/images/LOGO1024x1024.png',
+                        width: 50,
+                        height: 50,
+                      ),
                     ),
-                  ).animate().scale(duration: 600.ms, curve: Curves.easeOutBack),
-                  
+                  )
+                      .animate()
+                      .scale(duration: 600.ms, curve: Curves.easeOutBack),
+
                   const SizedBox(height: 24),
-                  
+
                   Text(
                     'Добро пожаловать',
                     style: AppTheme.headingStyle.copyWith(
                       fontSize: 28,
                     ),
                   ).animate().fade(duration: 400.ms).slideY(
-                    begin: 0.2,
-                    duration: 600.ms,
-                    curve: Curves.easeOutQuart,
-                  ),
-                  
+                        begin: 0.2,
+                        duration: 600.ms,
+                        curve: Curves.easeOutQuart,
+                      ),
+
                   const SizedBox(height: 8),
-                  
+
+                  Text(
+                    'with MTC',
+                    style: TextStyle(
+                      color: AppTheme.textLightColor,
+                      fontFamily: 'Baloo2',
+                      fontSize: 18,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ).animate().fade(delay: 100.ms, duration: 400.ms).slideY(
+                        begin: 0.2,
+                        duration: 600.ms,
+                        curve: Curves.easeOutQuart,
+                      ),
+
+                  const SizedBox(height: 8),
+
                   Text(
                     'Войдите в свой аккаунт',
                     style: AppTheme.captionStyle.copyWith(
                       fontSize: 16,
                     ),
                   ).animate(delay: 200.ms).fade(duration: 400.ms).slideY(
-                    begin: 0.2,
-                    duration: 600.ms,
-                    curve: Curves.easeOutQuart,
-                  ),
-                  
+                        begin: 0.2,
+                        duration: 600.ms,
+                        curve: Curves.easeOutQuart,
+                      ),
+
                   const SizedBox(height: 32),
-                  
+
                   // Форма входа
                   GlassCard(
                     hasShadow: true,
@@ -164,15 +163,14 @@ class _LoginScreenState extends State<LoginScreen> {
                               if (value == null || value.isEmpty) {
                                 return 'Пожалуйста, введите email';
                               }
-                              if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
+                              if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
+                                  .hasMatch(value)) {
                                 return 'Пожалуйста, введите корректный email';
                               }
                               return null;
                             },
                           ),
-                          
                           const SizedBox(height: 16),
-                          
                           TextFormField(
                             controller: _passwordController,
                             decoration: InputDecoration(
@@ -180,7 +178,9 @@ class _LoginScreenState extends State<LoginScreen> {
                               prefixIcon: const Icon(Icons.lock_outline),
                               suffixIcon: IconButton(
                                 icon: Icon(
-                                  _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                                  _obscurePassword
+                                      ? Icons.visibility_off
+                                      : Icons.visibility,
                                 ),
                                 onPressed: () {
                                   setState(() {
@@ -200,30 +200,13 @@ class _LoginScreenState extends State<LoginScreen> {
                               return null;
                             },
                           ),
-                          
                           const SizedBox(height: 8),
-                          
-                          Align(
-                            alignment: Alignment.centerRight,
-                            child: TextButton(
-                              onPressed: () {
-                                // Обработка нажатия на "Забыли пароль?"
-                              },
-                              child: Text(
-                                'Забыли пароль?',
-                                style: TextStyle(
-                                  color: AppTheme.primaryColor.withOpacity(0.8),
-                                ),
-                              ),
-                            ),
-                          ),
-                          
                           const SizedBox(height: 24),
-                          
                           SizedBox(
                             height: 50,
                             child: ElevatedButton(
-                              onPressed: authController.isLoading ? null : _login,
+                              onPressed:
+                                  authController.isLoading ? null : _login,
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: AppTheme.primaryColor,
                                 foregroundColor: Colors.white,
@@ -253,9 +236,9 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                   ).animate(delay: 400.ms).fade(duration: 600.ms),
-                  
+
                   const SizedBox(height: 24),
-                  
+
                   // Кнопка перехода к регистрации
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -268,7 +251,8 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       TextButton(
                         onPressed: () {
-                          Navigator.of(context).pushReplacementNamed('/register');
+                          Navigator.of(context)
+                              .pushReplacementNamed('/register');
                         },
                         child: const Text(
                           'Зарегистрироваться',
@@ -283,9 +267,21 @@ class _LoginScreenState extends State<LoginScreen> {
                 ],
               ),
             ),
+            Center(
+                child: ImageFiltered(
+              imageFilter: ImageFilter.blur(sigmaX: 100, sigmaY: 100),
+              child: Container(
+                width: 600,
+                height: 600,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: AppTheme.primaryColor.withOpacity(0.5),
+                ),
+              ),
+            )),
           ],
         ),
       ),
     );
   }
-} 
+}

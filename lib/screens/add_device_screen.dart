@@ -33,18 +33,19 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
         _isLoading = true;
       });
 
-      final authController = Provider.of<AuthController>(context, listen: false);
-      final deviceController = Provider.of<DeviceController>(context, listen: false);
-      
+      final authController =
+          Provider.of<AuthController>(context, listen: false);
+      final deviceController =
+          Provider.of<DeviceController>(context, listen: false);
+
       // Используем правильный метод из контроллера
-      deviceController.addDevice(
-        _deviceNameController.text, 
-        _deviceCodeController.text
-      ).then((success) {
+      deviceController
+          .addDevice(_deviceNameController.text, _deviceCodeController.text)
+          .then((success) {
         setState(() {
           _isLoading = false;
         });
-        
+
         if (success) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -56,7 +57,8 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Ошибка добавления устройства: ${deviceController.error}'),
+              content: Text(
+                  'Ошибка добавления устройства: ${deviceController.error}'),
               backgroundColor: Colors.red,
             ),
           );
@@ -95,7 +97,7 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
               ),
             ),
           ),
-          
+
           // Основное содержимое
           SingleChildScrollView(
             padding: const EdgeInsets.all(24.0),
@@ -108,25 +110,25 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
                   size: 180,
                   color: AppTheme.primaryColor,
                 ).animate().fade(duration: 600.ms),
-                
+
                 const SizedBox(height: 24),
-                
+
                 Text(
                   'Подключение NB-IoT устройства',
                   style: AppTheme.subheadingStyle,
                   textAlign: TextAlign.center,
                 ).animate().fade(delay: 200.ms, duration: 400.ms),
-                
+
                 const SizedBox(height: 8),
-                
+
                 Text(
                   'Введите информацию о вашем устройстве',
                   style: AppTheme.captionStyle,
                   textAlign: TextAlign.center,
                 ).animate().fade(delay: 300.ms, duration: 400.ms),
-                
+
                 const SizedBox(height: 32),
-                
+
                 // Форма добавления устройства
                 GlassCard(
                   hasShadow: true,
@@ -149,16 +151,17 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
                             return null;
                           },
                         ),
-                        
+
                         const SizedBox(height: 16),
-                        
+
                         // Код устройства
                         TextFormField(
                           controller: _deviceCodeController,
                           decoration: const InputDecoration(
                             labelText: 'Код устройства',
                             prefixIcon: Icon(Icons.qr_code),
-                            helperText: 'Код указан в документации к устройству',
+                            helperText:
+                                'Код указан в документации к устройству',
                           ),
                           validator: (value) {
                             if (value == null || value.isEmpty) {
@@ -170,9 +173,9 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
                             return null;
                           },
                         ),
-                        
+
                         const SizedBox(height: 24),
-                        
+
                         // Информация о устройстве
                         Container(
                           padding: const EdgeInsets.all(12),
@@ -201,9 +204,9 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
                             ],
                           ),
                         ),
-                        
+
                         const SizedBox(height: 16),
-                        
+
                         // Сообщение об ошибке
                         if (deviceController.error != null)
                           Padding(
@@ -217,7 +220,7 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
                               textAlign: TextAlign.center,
                             ),
                           ),
-                        
+
                         // Кнопка добавления
                         ElevatedButton.icon(
                           onPressed: _isLoading ? null : _addDevice,
@@ -245,4 +248,4 @@ class _AddDeviceScreenState extends State<AddDeviceScreen> {
       ),
     );
   }
-} 
+}

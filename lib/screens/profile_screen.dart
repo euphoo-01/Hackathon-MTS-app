@@ -3,6 +3,7 @@ import 'package:healarm/controllers/auth_controller.dart';
 import 'package:healarm/models/user_model.dart';
 import 'package:healarm/theme/app_theme.dart';
 import 'package:healarm/widgets/glass_card.dart';
+import 'package:healarm/widgets/app_logo.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
@@ -61,9 +62,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       });
 
       try {
-        final authController = Provider.of<AuthController>(context, listen: false);
-        
-        // Create updated user model
+        final authController =
+            Provider.of<AuthController>(context, listen: false);
         final updatedUser = UserModel(
           id: _user!.id,
           email: _emailController.text,
@@ -72,9 +72,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
           avatar: _user!.avatar,
           isVerified: _user!.isVerified,
         );
-        
+
         await authController.updateProfile(updatedUser);
-        
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Профиль успешно обновлен')),
         );
@@ -90,18 +89,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  Future<void> _logout() async {
-    try {
-      final authController = Provider.of<AuthController>(context, listen: false);
-      await authController.logout();
-      Navigator.of(context).pushReplacementNamed('/login');
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Ошибка при выходе из системы: $e')),
-      );
-    }
-  }
-
   @override
   void dispose() {
     _usernameController.dispose();
@@ -112,155 +99,219 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('Профиль пользователя'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: _logout,
-            tooltip: 'Выйти',
-          ),
-        ],
-      ),
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: AppTheme.backgroundGradient,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        automaticallyImplyLeading: false,
+        title: Row(
+          children: [
+            Text(
+              'Профиль',
+              style: TextStyle(
+                color: AppTheme.primaryColor,
+                fontFamily: 'Baloo2',
+                fontSize: 24,
+              ),
+            ),
+            const Spacer(),
+            const AppLogo(size: 24),
+          ],
         ),
-        child: _isLoading
-            ? const Center(child: CircularProgressIndicator())
-            : _user == null
-                ? const Center(child: Text('Пользователь не найден'))
-                : SingleChildScrollView(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      children: [
-                        CircleAvatar(
-                          radius: 60,
-                          backgroundColor: AppTheme.primaryColor.withOpacity(0.2),
-                          child: Icon(
-                            Icons.person,
-                            size: 60,
-                            color: AppTheme.primaryColor,
-                          ),
-                        ).animate().fadeIn(duration: 500.ms).slideY(
-                              begin: -0.2,
-                              end: 0,
-                              duration: 500.ms,
-                              curve: Curves.easeOutQuad,
-                            ),
-                        const SizedBox(height: 24),
-                        GlassCard(
-                          child: Padding(
-                            padding: const EdgeInsets.all(16.0),
-                            child: Form(
-                              key: _formKey,
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [
-                                  TextFormField(
-                                    controller: _usernameController,
-                                    decoration: const InputDecoration(
-                                      labelText: 'Имя пользователя',
-                                      prefixIcon: Icon(Icons.person),
-                                    ),
-                                    validator: (value) {
-                                      if (value == null || value.isEmpty) {
-                                        return 'Пожалуйста, введите имя пользователя';
-                                      }
-                                      return null;
-                                    },
-                                  ),
-                                  const SizedBox(height: 16),
-                                  TextFormField(
-                                    controller: _emailController,
-                                    decoration: const InputDecoration(
-                                      labelText: 'Email',
-                                      prefixIcon: Icon(Icons.email),
-                                    ),
-                                    readOnly: true, // Email cannot be changed
-                                    validator: (value) {
-                                      if (value == null || value.isEmpty) {
-                                        return 'Пожалуйста, введите email';
-                                      }
-                                      return null;
-                                    },
-                                  ),
-                                  const SizedBox(height: 16),
-                                  TextFormField(
-                                    controller: _phoneController,
-                                    decoration: const InputDecoration(
-                                      labelText: 'Телефон',
-                                      prefixIcon: Icon(Icons.phone),
-                                    ),
-                                    keyboardType: TextInputType.phone,
-                                  ),
-                                  const SizedBox(height: 24),
-                                  ElevatedButton(
-                                    onPressed: _isLoading ? null : _updateProfile,
-                                    child: _isLoading
-                                        ? const CircularProgressIndicator()
-                                        : const Text('Сохранить изменения'),
+      ),
+      body: SafeArea(
+        child: Stack(
+          children: [
+            // Декоративные элементы фона
+            Positioned(
+              top: -100,
+              right: -100,
+              child: Container(
+                width: 300,
+                height: 300,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: AppTheme.primaryColor.withOpacity(0.05),
+                ),
+              ),
+            ),
+
+            _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : _user == null
+                    ? const Center(child: Text('Пользователь не найден'))
+                    : SingleChildScrollView(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const SizedBox(height: 16),
+
+                            // Форма редактирования
+                            Container(
+                              padding: const EdgeInsets.all(16),
+                              margin: const EdgeInsets.symmetric(
+                                  horizontal: 4, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: AppTheme.cardLightColor,
+                                borderRadius: BorderRadius.circular(16),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.08),
+                                    blurRadius: 15,
+                                    spreadRadius: 1,
+                                    offset: const Offset(0, 4),
                                   ),
                                 ],
                               ),
-                            ),
-                          ),
-                        ).animate().fadeIn(duration: 500.ms).slideY(
-                              begin: 0.2,
-                              end: 0,
-                              duration: 500.ms,
-                              curve: Curves.easeOutQuad,
-                            ),
-                        const SizedBox(height: 24),
-                        GlassCard(
-                          child: Padding(
-                            padding: const EdgeInsets.all(16.0),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text(
-                                  'Информация об аккаунте',
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                const SizedBox(height: 16),
-                                ListTile(
-                                  leading: const Icon(Icons.verified),
-                                  title: const Text('Статус верификации'),
-                                  subtitle: Text(
-                                    _user!.isVerified ? 'Подтвержден' : 'Не подтвержден',
-                                    style: TextStyle(
-                                      color: _user!.isVerified
-                                          ? Colors.green
-                                          : Colors.red,
+                              child: Form(
+                                key: _formKey,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Личные данные',
+                                      style: AppTheme.headingStyle.copyWith(
+                                        fontSize: 20,
+                                      ),
                                     ),
+                                    const SizedBox(height: 16),
+                                    TextFormField(
+                                      controller: _usernameController,
+                                      style: TextStyle(
+                                          color: AppTheme.textDarkColor),
+                                      decoration: InputDecoration(
+                                        labelText: 'Имя пользователя',
+                                        labelStyle: TextStyle(
+                                            color: AppTheme.textDarkColor),
+                                        prefixIcon: Icon(Icons.person,
+                                            color: AppTheme.textDarkColor),
+                                        enabledBorder: UnderlineInputBorder(
+                                          borderSide: BorderSide(
+                                              color: AppTheme.textDarkColor
+                                                  .withOpacity(0.3)),
+                                        ),
+                                      ),
+                                      validator: (value) {
+                                        if (value == null || value.isEmpty) {
+                                          return 'Пожалуйста, введите имя пользователя';
+                                        }
+                                        return null;
+                                      },
+                                    ),
+                                    const SizedBox(height: 16),
+                                    TextFormField(
+                                      controller: _emailController,
+                                      style: TextStyle(
+                                          color: AppTheme.textDarkColor),
+                                      decoration: InputDecoration(
+                                        labelText: 'Email',
+                                        labelStyle: TextStyle(
+                                            color: AppTheme.textDarkColor),
+                                        prefixIcon: Icon(Icons.email,
+                                            color: AppTheme.textDarkColor),
+                                        enabledBorder: UnderlineInputBorder(
+                                          borderSide: BorderSide(
+                                              color: AppTheme.textDarkColor
+                                                  .withOpacity(0.3)),
+                                        ),
+                                      ),
+                                      readOnly: true,
+                                    ),
+                                    const SizedBox(height: 16),
+                                    TextFormField(
+                                      controller: _phoneController,
+                                      style: TextStyle(
+                                          color: AppTheme.textDarkColor),
+                                      decoration: InputDecoration(
+                                        labelText: 'Телефон',
+                                        labelStyle: TextStyle(
+                                            color: AppTheme.textDarkColor),
+                                        prefixIcon: Icon(Icons.phone,
+                                            color: AppTheme.textDarkColor),
+                                        enabledBorder: UnderlineInputBorder(
+                                          borderSide: BorderSide(
+                                              color: AppTheme.textDarkColor
+                                                  .withOpacity(0.3)),
+                                        ),
+                                      ),
+                                      keyboardType: TextInputType.phone,
+                                    ),
+                                    const SizedBox(height: 24),
+                                    SizedBox(
+                                      width: double.infinity,
+                                      child: ElevatedButton(
+                                        onPressed:
+                                            _isLoading ? null : _updateProfile,
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor:
+                                              AppTheme.primaryColor,
+                                          padding: const EdgeInsets.symmetric(
+                                              vertical: 16),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(12),
+                                          ),
+                                        ),
+                                        child: _isLoading
+                                            ? const CircularProgressIndicator()
+                                            : const Text(
+                                                'Сохранить изменения',
+                                                style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+
+                            const SizedBox(height: 24),
+
+                            // Кнопка выхода
+                            SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton(
+                                onPressed: () async {
+                                  final authController =
+                                      Provider.of<AuthController>(context,
+                                          listen: false);
+                                  await authController.logout();
+                                  if (context.mounted) {
+                                    Navigator.pushNamedAndRemoveUntil(
+                                      context,
+                                      '/login',
+                                      (route) => false,
+                                    );
+                                  }
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppTheme.primaryColor,
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 16),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
                                   ),
                                 ),
-                                const Divider(),
-                                ListTile(
-                                  leading: const Icon(Icons.badge),
-                                  title: const Text('ID пользователя'),
-                                  subtitle: Text(_user!.id),
+                                child: const Text(
+                                  'Выйти',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                 ),
-                              ],
+                              ),
                             ),
-                          ),
-                        ).animate().fadeIn(duration: 500.ms).slideY(
-                              begin: 0.2,
-                              end: 0,
-                              delay: 100.ms,
-                              duration: 500.ms,
-                              curve: Curves.easeOutQuad,
-                            ),
-                      ],
-                    ),
-                  ),
+                          ],
+                        ),
+                      ),
+          ],
+        ),
       ),
     );
   }
-} 
+}

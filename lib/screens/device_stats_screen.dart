@@ -19,20 +19,31 @@ class DeviceStatsScreen extends StatefulWidget {
   State<DeviceStatsScreen> createState() => _DeviceStatsScreenState();
 }
 
-class _DeviceStatsScreenState extends State<DeviceStatsScreen> {
-  DateTime _startDate = DateTime.now().subtract(const Duration(days: 7));
+class _DeviceStatsScreenState extends State<DeviceStatsScreen>
+    with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+  DateTime _startDate = DateTime.now().subtract(const Duration(hours: 24));
   DateTime _endDate = DateTime.now();
-  
+
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(length: 3, vsync: this);
     _loadReadings();
   }
-  
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
   void _loadReadings() {
     Future.microtask(() {
-      final deviceController = Provider.of<DeviceController>(context, listen: false);
-      deviceController.loadDeviceReadings(widget.deviceId, _startDate, _endDate);
+      final deviceController =
+          Provider.of<DeviceController>(context, listen: false);
+      deviceController.loadDeviceReadings(
+          widget.deviceId, _startDate, _endDate);
     });
   }
 
@@ -41,309 +52,123 @@ class _DeviceStatsScreenState extends State<DeviceStatsScreen> {
     final deviceController = Provider.of<DeviceController>(context);
     final device = deviceController.currentDevice;
     final readings = deviceController.readings;
-    
-    // Группировка показаний по дням
-    final Map<DateTime, List<DeviceReading>> readingsByDay = {};
-    for (var reading in readings) {
-      final date = DateTime(
-        reading.timestamp.year,
-        reading.timestamp.month,
-        reading.timestamp.day,
-      );
-      
-      if (!readingsByDay.containsKey(date)) {
-        readingsByDay[date] = [];
-      }
-      
-      readingsByDay[date]!.add(reading);
-    }
-    
-    // Сортировка дней по возрастанию
-    final sortedDays = readingsByDay.keys.toList()
-      ..sort((a, b) => a.compareTo(b));
 
     return Scaffold(
-      backgroundColor: AppTheme.backgroundLightColor,
+      backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: AppTheme.primaryColor),
+          onPressed: () => Navigator.pop(context),
+        ),
         title: Text(
           'Статистика устройства',
-          style: AppTheme.subheadingStyle.copyWith(fontSize: 20),
+          style: TextStyle(
+            color: AppTheme.primaryColor,
+            fontFamily: 'Baloo2',
+            fontSize: 24,
+          ),
         ),
-        iconTheme: const IconThemeData(color: AppTheme.primaryColor),
+        bottom: TabBar(
+          controller: _tabController,
+          tabs: [
+            Tab(
+              icon: Icon(Icons.favorite_border, color: AppTheme.textDarkColor),
+              text: 'Пульс',
+            ),
+            Tab(
+              icon: Icon(Icons.speed_outlined, color: AppTheme.textDarkColor),
+              text: 'Давление',
+            ),
+            Tab(
+              icon: Icon(Icons.screen_rotation_outlined,
+                  color: AppTheme.textDarkColor),
+              text: 'Положение',
+            ),
+          ],
+          labelColor: AppTheme.primaryColor,
+          unselectedLabelColor: AppTheme.textDarkColor,
+          indicatorColor: AppTheme.primaryColor,
+        ),
       ),
-      body: Stack(
-        children: [
-          // Декоративные элементы фона
-          Positioned(
-            top: -120,
-            right: -100,
-            child: Container(
-              width: 250,
-              height: 250,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: AppTheme.primaryColor.withOpacity(0.1),
+      body: SafeArea(
+        child: Stack(
+          children: [
+            // Декоративные элементы фона
+            Positioned(
+              top: 0,
+              right: 0,
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxWidth: MediaQuery.of(context).size.width * 0.8,
+                  maxHeight: MediaQuery.of(context).size.width * 0.8,
+                ),
+                child: Container(
+                  width: 300,
+                  height: 300,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: AppTheme.primaryColor.withOpacity(0.05),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppTheme.primaryColor.withOpacity(0.1),
+                        blurRadius: 100,
+                        spreadRadius: 20,
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ),
-          ),
-          
-          // Основное содержимое
-          SingleChildScrollView(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Название устройства и период
-                Text(
-                  device?.name ?? 'Устройство',
-                  style: AppTheme.headingStyle.copyWith(
-                    fontSize: 24,
-                  ),
-                ).animate().fade(duration: 400.ms),
-                
-                const SizedBox(height: 8),
-                
-                Text(
-                  'Статистика за ${_startDate.day}.${_startDate.month}.${_startDate.year} - ${_endDate.day}.${_endDate.month}.${_endDate.year}',
-                  style: AppTheme.captionStyle,
-                ).animate().fade(delay: 200.ms, duration: 400.ms),
-                
-                const SizedBox(height: 24),
-                
-                // Карточка выбора периода
-                GlassCard(
-                  hasShadow: true,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Выберите период',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                        ),
+
+            // Основное содержимое
+            if (readings.isEmpty)
+              Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.analytics_outlined,
+                      size: 64,
+                      color: AppTheme.textLightColor,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Нет данных для анализа',
+                      style: TextStyle(
+                        color: AppTheme.textColor,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w500,
                       ),
-                      
-                      const SizedBox(height: 16),
-                      
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _buildDateSelector(
-                              label: 'Начало',
-                              date: _startDate,
-                              onTap: () async {
-                                final pickedDate = await showDatePicker(
-                                  context: context,
-                                  initialDate: _startDate,
-                                  firstDate: DateTime.now().subtract(const Duration(days: 365)),
-                                  lastDate: _endDate,
-                                );
-                                
-                                if (pickedDate != null && mounted) {
-                                  setState(() {
-                                    _startDate = pickedDate;
-                                  });
-                                  _loadReadings();
-                                }
-                              },
-                            ),
-                          ),
-                          
-                          const SizedBox(width: 16),
-                          
-                          Expanded(
-                            child: _buildDateSelector(
-                              label: 'Конец',
-                              date: _endDate,
-                              onTap: () async {
-                                final pickedDate = await showDatePicker(
-                                  context: context,
-                                  initialDate: _endDate,
-                                  firstDate: _startDate,
-                                  lastDate: DateTime.now(),
-                                );
-                                
-                                if (pickedDate != null && mounted) {
-                                  setState(() {
-                                    _endDate = pickedDate;
-                                  });
-                                  _loadReadings();
-                                }
-                              },
-                            ),
-                          ),
-                        ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Статистика появится после получения данных от устройства',
+                      style: TextStyle(
+                        color: AppTheme.textLightColor,
+                        fontSize: 14,
                       ),
-                      
-                      const SizedBox(height: 16),
-                      
-                      // Быстрые фильтры
-                      SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: Row(
-                          children: [
-                            _buildFilterChip(
-                              label: 'Сегодня',
-                              onTap: () {
-                                setState(() {
-                                  _startDate = DateTime.now().subtract(const Duration(hours: 24));
-                                  _endDate = DateTime.now();
-                                });
-                                _loadReadings();
-                              },
-                            ),
-                            _buildFilterChip(
-                              label: 'Неделя',
-                              onTap: () {
-                                setState(() {
-                                  _startDate = DateTime.now().subtract(const Duration(days: 7));
-                                  _endDate = DateTime.now();
-                                });
-                                _loadReadings();
-                              },
-                            ),
-                            _buildFilterChip(
-                              label: 'Месяц',
-                              onTap: () {
-                                setState(() {
-                                  _startDate = DateTime.now().subtract(const Duration(days: 30));
-                                  _endDate = DateTime.now();
-                                });
-                                _loadReadings();
-                              },
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ).animate().fade(delay: 300.ms, duration: 400.ms),
-                
-                const SizedBox(height: 24),
-                
-                // Статистика пульса
-                if (device?.settings.isPulseTrackingEnabled ?? false)
-                  _buildStatSection(
-                    title: 'Статистика пульса',
-                    readings: readings,
-                    readingsByDay: readingsByDay,
-                    sortedDays: sortedDays,
-                    valueExtractor: (reading) => reading.pulseRate,
-                    color: AppTheme.primaryColor,
-                    unit: 'уд/мин',
-                    minY: 40,
-                    maxY: 140,
-                    delay: 400,
-                  ),
-                
-                const SizedBox(height: 24),
-                
-                // Статистика систолического давления
-                if (device?.settings.isPressureTrackingEnabled ?? false)
-                  _buildStatSection(
-                    title: 'Систолическое давление',
-                    readings: readings,
-                    readingsByDay: readingsByDay,
-                    sortedDays: sortedDays,
-                    valueExtractor: (reading) => reading.systolicPressure,
-                    color: AppTheme.primaryDarkColor,
-                    unit: 'мм рт. ст.',
-                    minY: 90,
-                    maxY: 180,
-                    delay: 500,
-                  ),
-                
-                const SizedBox(height: 24),
-                
-                // Статистика диастолического давления
-                if (device?.settings.isPressureTrackingEnabled ?? false)
-                  _buildStatSection(
-                    title: 'Диастолическое давление',
-                    readings: readings,
-                    readingsByDay: readingsByDay,
-                    sortedDays: sortedDays,
-                    valueExtractor: (reading) => reading.diastolicPressure,
-                    color: AppTheme.accentColor,
-                    unit: 'мм рт. ст.',
-                    minY: 50,
-                    maxY: 120,
-                    delay: 600,
-                  ),
-                
-                const SizedBox(height: 24),
-                
-                // Критические события
-                GlassCard(
-                  hasShadow: true,
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      AppTheme.warningColor.withOpacity(0.7),
-                      AppTheme.errorColor.withOpacity(0.7),
-                    ],
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Критические события',
-                        style: AppTheme.subheadingStyle.copyWith(
-                          color: Colors.white,
-                        ),
-                      ),
-                      
-                      const SizedBox(height: 16),
-                      
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          _buildEventCounter(
-                            icon: Icons.favorite_border,
-                            count: readings.where((r) => 
-                              r.pulseRate != null && (r.pulseRate! > 120 || r.pulseRate! < 45)
-                            ).length,
-                            label: 'Критический пульс',
-                          ),
-                          _buildEventCounter(
-                            icon: Icons.speed_outlined,
-                            count: readings.where((r) => 
-                              r.systolicPressure != null && r.diastolicPressure != null && 
-                              (r.systolicPressure! > 180 || r.systolicPressure! < 90 ||
-                               r.diastolicPressure! > 120 || r.diastolicPressure! < 60)
-                            ).length,
-                            label: 'Критическое давление',
-                          ),
-                          _buildEventCounter(
-                            icon: Icons.screen_rotation_outlined,
-                            count: readings.where((r) => 
-                              r.bodyAngle != null && r.bodyAngle! > 60
-                            ).length,
-                            label: 'Критический наклон',
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ).animate().fade(delay: 700.ms, duration: 400.ms),
-                
-                const SizedBox(height: 16),
-              ],
-            ),
-          ),
-          
-          // Индикатор загрузки
-          if (deviceController.isLoading)
-            const Center(
-              child: CircularProgressIndicator(),
-            ),
-        ],
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              )
+            else
+              TabBarView(
+                controller: _tabController,
+                children: [
+                  _buildPulseTab(),
+                  _buildPressureTab(),
+                  _buildPositionTab(),
+                ],
+              ),
+          ],
+        ),
       ),
     );
   }
-  
+
   Widget _buildDateSelector({
     required String label,
     required DateTime date,
@@ -400,7 +225,7 @@ class _DeviceStatsScreenState extends State<DeviceStatsScreen> {
       ),
     );
   }
-  
+
   Widget _buildFilterChip({
     required String label,
     required VoidCallback onTap,
@@ -427,7 +252,7 @@ class _DeviceStatsScreenState extends State<DeviceStatsScreen> {
       ),
     );
   }
-  
+
   Widget _buildStatSection({
     required String title,
     required List<DeviceReading> readings,
@@ -440,52 +265,60 @@ class _DeviceStatsScreenState extends State<DeviceStatsScreen> {
     required double maxY,
     required int delay,
   }) {
-    // Расчет средних значений по дням
+    // Расчет значений по часам
     final List<FlSpot> spots = [];
-    for (int i = 0; i < sortedDays.length; i++) {
-      final date = sortedDays[i];
-      final dayReadings = readingsByDay[date]!;
-      
-      // Фильтруем показания с ненулевыми значениями
-      final validReadings = dayReadings
-          .where((r) => valueExtractor(r) != null)
-          .toList();
-      
-      if (validReadings.isNotEmpty) {
-        // Расчет среднего значения
-        final sum = validReadings.fold<int>(
-          0, 
-          (sum, reading) => sum + (valueExtractor(reading) ?? 0),
-        );
-        final average = sum / validReadings.length;
-        
-        spots.add(FlSpot(i.toDouble(), average));
+    final now = DateTime.now();
+    final yesterday = now.subtract(const Duration(hours: 24));
+
+    // Группируем показания по часам
+    final Map<int, List<int>> valuesByHour = {};
+    for (var reading in readings) {
+      if (reading.timestamp.isAfter(yesterday)) {
+        final hour = reading.timestamp.hour;
+        final value = valueExtractor(reading);
+        if (value != null) {
+          if (!valuesByHour.containsKey(hour)) {
+            valuesByHour[hour] = [];
+          }
+          valuesByHour[hour]!.add(value);
+        }
       }
     }
-    
+
+    // Создаем точки для графика
+    for (int hour = 0; hour < 24; hour++) {
+      if (valuesByHour.containsKey(hour)) {
+        final values = valuesByHour[hour]!;
+        final average = values.reduce((a, b) => a + b) / values.length;
+        spots.add(FlSpot(hour.toDouble(), average));
+      }
+    }
+
     // Расчет статистики
     int? min, max;
     double avg = 0;
     int count = 0;
-    
+
     for (final reading in readings) {
-      final value = valueExtractor(reading);
-      if (value != null) {
-        if (min == null || value < min) {
-          min = value;
+      if (reading.timestamp.isAfter(yesterday)) {
+        final value = valueExtractor(reading);
+        if (value != null) {
+          if (min == null || value < min) {
+            min = value;
+          }
+          if (max == null || value > max) {
+            max = value;
+          }
+          avg += value;
+          count++;
         }
-        if (max == null || value > max) {
-          max = value;
-        }
-        avg += value;
-        count++;
       }
     }
-    
+
     if (count > 0) {
       avg /= count;
     }
-    
+
     return GlassCard(
       hasShadow: true,
       child: Column(
@@ -493,13 +326,15 @@ class _DeviceStatsScreenState extends State<DeviceStatsScreen> {
         children: [
           Text(
             title,
-            style: AppTheme.subheadingStyle.copyWith(
+            style: TextStyle(
               fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: AppTheme.textDarkColor,
             ),
           ),
-          
+
           const SizedBox(height: 16),
-          
+
           // Значения статистики
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -521,25 +356,37 @@ class _DeviceStatsScreenState extends State<DeviceStatsScreen> {
               ),
             ],
           ),
-          
+
           const SizedBox(height: 16),
-          
+
           // График
           SizedBox(
             height: 200,
             child: spots.isEmpty
-                ? const Center(
-                    child: Text('Нет данных для отображения'),
+                ? Center(
+                    child: Text(
+                      'Нет данных для отображения',
+                      style: TextStyle(
+                        color: AppTheme.textDarkColor,
+                      ),
+                    ),
                   )
                 : LineChart(
                     LineChartData(
                       gridData: FlGridData(
                         show: true,
-                        drawVerticalLine: false,
+                        drawVerticalLine: true,
                         horizontalInterval: (maxY - minY) / 5,
+                        verticalInterval: 4,
                         getDrawingHorizontalLine: (value) {
                           return FlLine(
-                            color: Colors.grey.withOpacity(0.2),
+                            color: AppTheme.textDarkColor.withOpacity(0.2),
+                            strokeWidth: 1,
+                          );
+                        },
+                        getDrawingVerticalLine: (value) {
+                          return FlLine(
+                            color: AppTheme.textDarkColor.withOpacity(0.2),
                             strokeWidth: 1,
                           );
                         },
@@ -555,43 +402,48 @@ class _DeviceStatsScreenState extends State<DeviceStatsScreen> {
                           sideTitles: SideTitles(
                             showTitles: true,
                             getTitlesWidget: (value, meta) {
-                              if (value.toInt() >= sortedDays.length || value.toInt() < 0) {
-                                return const SizedBox();
-                              }
-                              
-                              final date = sortedDays[value.toInt()];
-                              
-                              return Padding(
-                                padding: const EdgeInsets.only(top: 8.0),
-                                child: Text(
-                                  '${date.day}.${date.month}',
-                                  style: AppTheme.captionStyle.copyWith(
-                                    fontSize: 12,
+                              if (value % 4 == 0) {
+                                return SideTitleWidget(
+                                  axisSide: meta.axisSide,
+                                  child: Text(
+                                    '${value.toInt()}:00',
+                                    style: TextStyle(
+                                      color: AppTheme.textDarkColor,
+                                      fontSize: 12,
+                                    ),
                                   ),
-                                ),
-                              );
+                                );
+                              }
+                              return const SizedBox();
                             },
-                            reservedSize: 30,
                           ),
                         ),
                         leftTitles: AxisTitles(
                           sideTitles: SideTitles(
                             showTitles: true,
                             getTitlesWidget: (value, meta) {
-                              return Text(
-                                value.toInt().toString(),
-                                style: AppTheme.captionStyle.copyWith(
-                                  fontSize: 12,
+                              return SideTitleWidget(
+                                axisSide: meta.axisSide,
+                                child: Text(
+                                  value.toInt().toString(),
+                                  style: TextStyle(
+                                    color: AppTheme.textDarkColor,
+                                    fontSize: 12,
+                                  ),
                                 ),
                               );
                             },
-                            reservedSize: 30,
                           ),
                         ),
                       ),
-                      borderData: FlBorderData(show: false),
+                      borderData: FlBorderData(
+                        show: true,
+                        border: Border.all(
+                          color: AppTheme.textDarkColor.withOpacity(0.2),
+                        ),
+                      ),
                       minX: 0,
-                      maxX: (sortedDays.length - 1).toDouble(),
+                      maxX: 23,
                       minY: minY,
                       maxY: maxY,
                       lineBarsData: [
@@ -618,14 +470,33 @@ class _DeviceStatsScreenState extends State<DeviceStatsScreen> {
                           ),
                         ),
                       ],
+                      lineTouchData: LineTouchData(
+                        touchTooltipData: LineTouchTooltipData(
+                          tooltipBgColor: Colors.white,
+                          tooltipRoundedRadius: 8,
+                          getTooltipItems: (List<LineBarSpot> touchedSpots) {
+                            return touchedSpots.map((spot) {
+                              return LineTooltipItem(
+                                '${spot.y.toStringAsFixed(1)} $unit\n${spot.x.toInt()}:00',
+                                TextStyle(
+                                  color: AppTheme.textDarkColor,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              );
+                            }).toList();
+                          },
+                        ),
+                      ),
                     ),
                   ),
           ),
         ],
       ),
-    ).animate().fade(delay: Duration(milliseconds: delay), duration: const Duration(milliseconds: 400));
+    ).animate().fade(
+        delay: Duration(milliseconds: delay),
+        duration: const Duration(milliseconds: 400));
   }
-  
+
   Widget _buildStatValue({
     required String label,
     required String value,
@@ -648,7 +519,7 @@ class _DeviceStatsScreenState extends State<DeviceStatsScreen> {
       ],
     );
   }
-  
+
   Widget _buildEventCounter({
     required IconData icon,
     required int count,
@@ -691,4 +562,95 @@ class _DeviceStatsScreenState extends State<DeviceStatsScreen> {
       ],
     );
   }
-} 
+
+  Widget _buildPulseTab() {
+    final deviceController = Provider.of<DeviceController>(context);
+    final readings = deviceController.readings;
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildStatSection(
+            title: 'Статистика пульса',
+            readings: readings,
+            readingsByDay: {},
+            sortedDays: [],
+            valueExtractor: (reading) => reading.pulseRate,
+            color: AppTheme.primaryColor,
+            unit: 'уд/мин',
+            minY: 40,
+            maxY: 140,
+            delay: 0,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPressureTab() {
+    final deviceController = Provider.of<DeviceController>(context);
+    final readings = deviceController.readings;
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildStatSection(
+            title: 'Систолическое давление',
+            readings: readings,
+            readingsByDay: {},
+            sortedDays: [],
+            valueExtractor: (reading) => reading.systolicPressure,
+            color: AppTheme.primaryColor,
+            unit: 'мм рт.ст.',
+            minY: 90,
+            maxY: 180,
+            delay: 0,
+          ),
+          const SizedBox(height: 16),
+          _buildStatSection(
+            title: 'Диастолическое давление',
+            readings: readings,
+            readingsByDay: {},
+            sortedDays: [],
+            valueExtractor: (reading) => reading.diastolicPressure,
+            color: AppTheme.accentColor,
+            unit: 'мм рт.ст.',
+            minY: 50,
+            maxY: 120,
+            delay: 200,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPositionTab() {
+    final deviceController = Provider.of<DeviceController>(context);
+    final readings = deviceController.readings;
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildStatSection(
+            title: 'Положение тела',
+            readings: readings,
+            readingsByDay: {},
+            sortedDays: [],
+            valueExtractor: (reading) => reading.bodyAngle,
+            color: AppTheme.successColor,
+            unit: '°',
+            minY: 0,
+            maxY: 180,
+            delay: 0,
+          ),
+        ],
+      ),
+    );
+  }
+}

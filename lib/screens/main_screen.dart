@@ -13,18 +13,19 @@ class MainScreen extends StatefulWidget {
   State<MainScreen> createState() => _MainScreenState();
 }
 
-class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateMixin {
+class _MainScreenState extends State<MainScreen>
+    with SingleTickerProviderStateMixin {
   int _currentIndex = 0;
   final PageController _pageController = PageController();
   late AnimationController _animationController;
-  
+
   final List<Widget> _pages = [
     const HomeScreen(),
     const NotificationsScreen(),
     const StatisticsScreen(),
     const ProfileScreen(),
   ];
-  
+
   @override
   void initState() {
     super.initState();
@@ -33,7 +34,7 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
       duration: const Duration(milliseconds: 400),
     );
   }
-  
+
   @override
   void dispose() {
     _pageController.dispose();
@@ -83,10 +84,22 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _buildNavItem(0, Icons.home_outlined, Icons.home, 'Главная'),
-                _buildNavItem(1, Icons.notifications_outlined, Icons.notifications, 'Уведомления'),
-                _buildNavItem(2, Icons.stacked_line_chart, Icons.stacked_line_chart, 'Статистика'),
-                _buildNavItem(3, Icons.person_outline, Icons.person, 'Профиль'),
+                Expanded(
+                  child: _buildNavItem(
+                      0, Icons.home_outlined, Icons.home, 'Главная'),
+                ),
+                Expanded(
+                  child: _buildNavItem(1, Icons.notifications_outlined,
+                      Icons.notifications, 'Уведомления'),
+                ),
+                Expanded(
+                  child: _buildNavItem(2, Icons.stacked_line_chart,
+                      Icons.stacked_line_chart, 'Статистика'),
+                ),
+                Expanded(
+                  child: _buildNavItem(
+                      3, Icons.person_outline, Icons.person, 'Профиль'),
+                ),
               ],
             ),
           ),
@@ -94,10 +107,11 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
       ).animate().fade(duration: 400.ms),
     );
   }
-  
-  Widget _buildNavItem(int index, IconData outlinedIcon, IconData filledIcon, String label) {
+
+  Widget _buildNavItem(
+      int index, IconData outlinedIcon, IconData filledIcon, String label) {
     final isSelected = _currentIndex == index;
-    
+
     return InkWell(
       onTap: () => _onItemTapped(index),
       borderRadius: BorderRadius.circular(16),
@@ -105,14 +119,17 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
-          color: isSelected ? AppTheme.primaryColor.withOpacity(0.1) : Colors.transparent,
+          color: isSelected
+              ? AppTheme.primaryColor.withOpacity(0.1)
+              : Colors.transparent,
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
               isSelected ? filledIcon : outlinedIcon,
-              color: isSelected ? AppTheme.primaryColor : AppTheme.textLightColor,
+              color:
+                  isSelected ? AppTheme.primaryColor : AppTheme.textLightColor,
               size: 24,
             ),
             const SizedBox(height: 4),
@@ -121,7 +138,9 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                color: isSelected ? AppTheme.primaryColor : AppTheme.textLightColor,
+                color: isSelected
+                    ? AppTheme.primaryColor
+                    : AppTheme.textLightColor,
               ),
             ),
           ],
@@ -129,4 +148,4 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
       ),
     );
   }
-} 
+}

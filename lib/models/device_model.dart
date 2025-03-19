@@ -16,7 +16,8 @@ class DeviceModel {
   final DateTime? lastActive;
   final DeviceSettings settings;
   final DeviceStatus status;
-  final List<DeviceReading>? readings;
+  final List<DeviceReading> readings;
+  final DeviceReading? lastReading;
 
   DeviceModel({
     required this.id,
@@ -27,25 +28,32 @@ class DeviceModel {
     this.lastActive,
     required this.settings,
     this.status = DeviceStatus.normal,
-    this.readings,
+    required this.readings,
+    this.lastReading,
   });
 
   factory DeviceModel.fromJson(Map<String, dynamic> json) {
     return DeviceModel(
-      id: json['id'],
-      userId: json['userId'],
-      name: json['name'],
-      deviceCode: json['deviceCode'],
-      createdAt: DateTime.parse(json['createdAt']),
-      lastActive: json['lastActive'] != null ? DateTime.parse(json['lastActive']) : null,
-      settings: DeviceSettings.fromJson(json['settings']),
+      id: json['id'] as String,
+      userId: json['userId'] as String,
+      name: json['name'] as String,
+      deviceCode: json['deviceCode'] as String,
+      createdAt: DateTime.parse(json['createdAt'] as String),
+      lastActive: json['lastActive'] != null
+          ? DateTime.parse(json['lastActive'] as String)
+          : null,
+      settings:
+          DeviceSettings.fromJson(json['settings'] as Map<String, dynamic>),
       status: DeviceStatus.values.firstWhere(
         (e) => e.toString() == 'DeviceStatus.${json['status']}',
-        orElse: () => DeviceStatus.normal,
+        orElse: () => DeviceStatus.offline,
       ),
-      readings: json['readings'] != null
-          ? List<DeviceReading>.from(
-              json['readings'].map((x) => DeviceReading.fromJson(x)))
+      readings: (json['readings'] as List<dynamic>?)
+              ?.map((e) => DeviceReading.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          [],
+      lastReading: json['lastReading'] != null
+          ? DeviceReading.fromJson(json['lastReading'] as Map<String, dynamic>)
           : null,
     );
   }
@@ -60,7 +68,8 @@ class DeviceModel {
       'lastActive': lastActive?.toIso8601String(),
       'settings': settings.toJson(),
       'status': status.toString().split('.').last,
-      'readings': readings?.map((x) => x.toJson()).toList(),
+      'readings': readings.map((e) => e.toJson()).toList(),
+      'lastReading': lastReading?.toJson(),
     };
   }
 
@@ -74,6 +83,7 @@ class DeviceModel {
     DeviceSettings? settings,
     DeviceStatus? status,
     List<DeviceReading>? readings,
+    DeviceReading? lastReading,
   }) {
     return DeviceModel(
       id: id ?? this.id,
@@ -85,6 +95,7 @@ class DeviceModel {
       settings: settings ?? this.settings,
       status: status ?? this.status,
       readings: readings ?? this.readings,
+      lastReading: lastReading ?? this.lastReading,
     );
   }
 }
@@ -127,10 +138,14 @@ class DeviceSettings {
     int? measurementIntervalMinutes,
   }) {
     return DeviceSettings(
-      isPulseTrackingEnabled: isPulseTrackingEnabled ?? this.isPulseTrackingEnabled,
-      isPressureTrackingEnabled: isPressureTrackingEnabled ?? this.isPressureTrackingEnabled,
-      isPositionTrackingEnabled: isPositionTrackingEnabled ?? this.isPositionTrackingEnabled,
-      measurementIntervalMinutes: measurementIntervalMinutes ?? this.measurementIntervalMinutes,
+      isPulseTrackingEnabled:
+          isPulseTrackingEnabled ?? this.isPulseTrackingEnabled,
+      isPressureTrackingEnabled:
+          isPressureTrackingEnabled ?? this.isPressureTrackingEnabled,
+      isPositionTrackingEnabled:
+          isPositionTrackingEnabled ?? this.isPositionTrackingEnabled,
+      measurementIntervalMinutes:
+          measurementIntervalMinutes ?? this.measurementIntervalMinutes,
     );
   }
 }
@@ -181,4 +196,4 @@ class DeviceReading {
       'isAnomaly': isAnomaly,
     };
   }
-} 
+}

@@ -3,6 +3,7 @@ import 'package:healarm/controllers/device_controller.dart';
 import 'package:healarm/models/device_model.dart';
 import 'package:healarm/theme/app_theme.dart';
 import 'package:healarm/widgets/glass_card.dart';
+import 'package:healarm/widgets/app_logo.dart';
 import 'package:provider/provider.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -17,11 +18,12 @@ class StatisticsScreen extends StatefulWidget {
   _StatisticsScreenState createState() => _StatisticsScreenState();
 }
 
-class _StatisticsScreenState extends State<StatisticsScreen> with SingleTickerProviderStateMixin {
+class _StatisticsScreenState extends State<StatisticsScreen>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
   List<DeviceModel> _devices = [];
   DeviceModel? _selectedDevice;
-  String _timeRange = 'week'; // 'day', 'week', 'month'
+  String _timeRange = 'day';
   bool _isLoading = false;
   List<DeviceReading> _filteredReadings = [];
   final DateFormat _dateFormat = DateFormat('dd.MM HH:mm');
@@ -31,6 +33,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> with SingleTickerPr
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+    _timeRange = 'day';
     _loadDevices();
   }
 
@@ -46,17 +49,19 @@ class _StatisticsScreenState extends State<StatisticsScreen> with SingleTickerPr
     });
 
     try {
-      final deviceController = Provider.of<DeviceController>(context, listen: false);
-      
+      final deviceController =
+          Provider.of<DeviceController>(context, listen: false);
+
       // Используем Future.microtask, чтобы избежать вызова notifyListeners во время построения
       Future.microtask(() async {
         final devices = await deviceController.getAllDevices();
-        
+
         if (mounted) {
           setState(() {
             _devices = devices;
             if (widget.deviceId != null) {
-              final deviceIndex = _devices.indexWhere((device) => device.id == widget.deviceId);
+              final deviceIndex =
+                  _devices.indexWhere((device) => device.id == widget.deviceId);
               if (deviceIndex != -1) {
                 _selectedDevice = _devices[deviceIndex];
               } else if (_devices.isNotEmpty) {
@@ -65,11 +70,11 @@ class _StatisticsScreenState extends State<StatisticsScreen> with SingleTickerPr
             } else if (_devices.isNotEmpty) {
               _selectedDevice = _devices.first;
             }
-            
+
             if (_selectedDevice != null) {
               _filterReadings();
             }
-            
+
             _isLoading = false;
           });
         }
@@ -87,7 +92,8 @@ class _StatisticsScreenState extends State<StatisticsScreen> with SingleTickerPr
   }
 
   void _filterReadings() {
-    if (_selectedDevice?.readings == null || _selectedDevice!.readings!.isEmpty) {
+    if (_selectedDevice?.readings == null ||
+        _selectedDevice!.readings!.isEmpty) {
       _filteredReadings = [];
       return;
     }
@@ -98,23 +104,27 @@ class _StatisticsScreenState extends State<StatisticsScreen> with SingleTickerPr
     // Определяем начальную дату в зависимости от выбранного периода
     switch (_timeRange) {
       case 'day':
-        startDate = DateTime(now.year, now.month, now.day).subtract(const Duration(days: 1));
+        startDate = DateTime(now.year, now.month, now.day)
+            .subtract(const Duration(days: 1));
         break;
       case 'week':
-        startDate = DateTime(now.year, now.month, now.day).subtract(const Duration(days: 7));
+        startDate = DateTime(now.year, now.month, now.day)
+            .subtract(const Duration(days: 7));
         break;
       case 'month':
-        startDate = DateTime(now.year, now.month, now.day).subtract(const Duration(days: 30));
+        startDate = DateTime(now.year, now.month, now.day)
+            .subtract(const Duration(days: 30));
         break;
       default:
-        startDate = DateTime(now.year, now.month, now.day).subtract(const Duration(days: 7));
+        startDate = DateTime(now.year, now.month, now.day)
+            .subtract(const Duration(days: 7));
     }
 
     // Фильтруем показания за выбранный период
     _filteredReadings = _selectedDevice!.readings!
         .where((reading) => reading.timestamp.isAfter(startDate))
         .toList();
-    
+
     // Сортируем показания по времени
     _filteredReadings.sort((a, b) => a.timestamp.compareTo(b.timestamp));
   }
@@ -130,120 +140,125 @@ class _StatisticsScreenState extends State<StatisticsScreen> with SingleTickerPr
     });
   }
 
-  void _onTimeRangeChanged(String? range) {
-    if (range != null) {
-      setState(() {
-        _timeRange = range;
-        if (_selectedDevice != null) {
-          _filterReadings();
-        }
-      });
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('Статистика показателей'),
-        bottom: TabBar(
-          controller: _tabController,
-          tabs: const [
-            Tab(text: 'Пульс'),
-            Tab(text: 'Давление'),
-            Tab(text: 'Положение'),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        title: Row(
+          children: [
+            Text(
+              'Статистика',
+              style: TextStyle(
+                color: AppTheme.primaryColor,
+                fontFamily: 'Baloo2',
+                fontSize: 24,
+              ),
+            ),
+            const Spacer(),
+            const AppLogo(size: 24),
           ],
         ),
       ),
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: AppTheme.backgroundGradient,
-        ),
+      body: SafeArea(
         child: _isLoading
             ? const Center(child: CircularProgressIndicator())
             : _devices.isEmpty
-                ? const Center(child: Text('Нет подключенных устройств'))
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.device_unknown,
+                          size: 64,
+                          color: AppTheme.textLightColor,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Нет доступных устройств',
+                          style: TextStyle(
+                            color: AppTheme.textColor,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Добавьте устройство для просмотра статистики',
+                          style: TextStyle(
+                            color: AppTheme.textLightColor,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
                 : Column(
                     children: [
-                      _buildDeviceSelector(),
-                      _buildTimeRangeSelector(),
+                      // Выбор устройства
+                      Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: DropdownButtonFormField<DeviceModel>(
+                          value: _selectedDevice,
+                          decoration: InputDecoration(
+                            labelText: 'Выберите устройство',
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          items: _devices.map((device) {
+                            return DropdownMenuItem(
+                              value: device,
+                              child: Text(device.name),
+                            );
+                          }).toList(),
+                          onChanged: (device) {
+                            setState(() {
+                              _selectedDevice = device;
+                              _filterReadings();
+                            });
+                          },
+                        ),
+                      ),
+
+                      // Вкладки со статистикой
                       Expanded(
-                        child: TabBarView(
-                          controller: _tabController,
-                          children: [
-                            _buildPulseTab(),
-                            _buildPressureTab(),
-                            _buildPositionTab(),
-                          ],
+                        child: DefaultTabController(
+                          length: 3,
+                          child: Column(
+                            children: [
+                              Container(
+                                color: Colors.white,
+                                child: TabBar(
+                                  labelColor: AppTheme.primaryColor,
+                                  unselectedLabelColor: AppTheme.textLightColor,
+                                  indicatorColor: AppTheme.primaryColor,
+                                  tabs: const [
+                                    Tab(text: 'Пульс'),
+                                    Tab(text: 'Давление'),
+                                    Tab(text: 'Положение'),
+                                  ],
+                                ),
+                              ),
+                              Expanded(
+                                child: TabBarView(
+                                  children: [
+                                    _buildPulseTab(),
+                                    _buildPressureTab(),
+                                    _buildPositionTab(),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ],
                   ),
       ),
     );
-  }
-
-  Widget _buildDeviceSelector() {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: GlassCard(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-          child: DropdownButtonHideUnderline(
-            child: DropdownButton<DeviceModel>(
-              isExpanded: true,
-              value: _selectedDevice,
-              hint: const Text('Выберите устройство'),
-              items: _devices.map((device) {
-                return DropdownMenuItem<DeviceModel>(
-                  value: device,
-                  child: Text(device.name),
-                );
-              }).toList(),
-              onChanged: _onDeviceChanged,
-            ),
-          ),
-        ),
-      ).animate().fadeIn(duration: 300.ms).slideY(
-            begin: 0.1,
-            end: 0,
-            duration: 300.ms,
-            curve: Curves.easeOutQuad,
-          ),
-    );
-  }
-
-  Widget _buildTimeRangeSelector() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          _buildTimeRangeChip('day', 'День'),
-          _buildTimeRangeChip('week', 'Неделя'),
-          _buildTimeRangeChip('month', 'Месяц'),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTimeRangeChip(String value, String label) {
-    final isSelected = _timeRange == value;
-    return FilterChip(
-      label: Text(label),
-      selected: isSelected,
-      onSelected: (_) => _onTimeRangeChanged(value),
-      backgroundColor: Colors.white.withOpacity(0.1),
-      selectedColor: AppTheme.primaryColor.withOpacity(0.3),
-      checkmarkColor: Colors.white,
-      labelStyle: TextStyle(
-        color: isSelected ? Colors.white : Colors.white.withOpacity(0.7),
-      ),
-    ).animate(target: isSelected ? 1 : 0).scale(
-          begin: const Offset(0.95, 0.95),
-          end: const Offset(1, 1),
-          duration: 300.ms,
-        );
   }
 
   Widget _buildPulseTab() {
@@ -255,10 +270,12 @@ class _StatisticsScreenState extends State<StatisticsScreen> with SingleTickerPr
       return const Center(child: Text('Нет данных за выбранный период'));
     }
 
-    final pulseReadings = _filteredReadings.where((r) => r.pulseRate != null).toList();
-    
+    final pulseReadings =
+        _filteredReadings.where((r) => r.pulseRate != null).toList();
+
     if (pulseReadings.isEmpty) {
-      return const Center(child: Text('Нет данных о пульсе за выбранный период'));
+      return const Center(
+          child: Text('Нет данных о пульсе за выбранный период'));
     }
 
     // Находим минимальное и максимальное значения для графика
@@ -268,10 +285,12 @@ class _StatisticsScreenState extends State<StatisticsScreen> with SingleTickerPr
     final maxPulse = pulseReadings.map((r) => r.pulseRate!).reduce(
           (max, value) => max > value ? max : value,
         );
-    
+
     // Средний пульс
-    final avgPulse = pulseReadings.map((r) => r.pulseRate!).reduce((a, b) => a + b) / pulseReadings.length;
-    
+    final avgPulse =
+        pulseReadings.map((r) => r.pulseRate!).reduce((a, b) => a + b) /
+            pulseReadings.length;
+
     // Аномальные показания
     final anomalies = pulseReadings.where((r) => r.isAnomaly).toList();
 
@@ -302,11 +321,16 @@ class _StatisticsScreenState extends State<StatisticsScreen> with SingleTickerPr
                     ),
                   ),
                   const SizedBox(height: 16),
-                  SizedBox(
-                    height: 250,
-                    child: LineChart(
-                      _buildPulseLineChart(pulseReadings),
-                    ),
+                  _buildChart(
+                    pulseReadings.asMap().entries.map((entry) {
+                      final reading = entry.value;
+                      return FlSpot(
+                        entry.key.toDouble(),
+                        reading.pulseRate!.toDouble(),
+                      );
+                    }).toList(),
+                    'Пульс',
+                    AppTheme.primaryColor,
                   ),
                 ],
               ),
@@ -334,15 +358,22 @@ class _StatisticsScreenState extends State<StatisticsScreen> with SingleTickerPr
     final pressureReadings = _filteredReadings
         .where((r) => r.systolicPressure != null && r.diastolicPressure != null)
         .toList();
-    
+
     if (pressureReadings.isEmpty) {
-      return const Center(child: Text('Нет данных о давлении за выбранный период'));
+      return const Center(
+          child: Text('Нет данных о давлении за выбранный период'));
     }
 
     // Средние значения
-    final avgSystolic = pressureReadings.map((r) => r.systolicPressure!).reduce((a, b) => a + b) / pressureReadings.length;
-    final avgDiastolic = pressureReadings.map((r) => r.diastolicPressure!).reduce((a, b) => a + b) / pressureReadings.length;
-    
+    final avgSystolic = pressureReadings
+            .map((r) => r.systolicPressure!)
+            .reduce((a, b) => a + b) /
+        pressureReadings.length;
+    final avgDiastolic = pressureReadings
+            .map((r) => r.diastolicPressure!)
+            .reduce((a, b) => a + b) /
+        pressureReadings.length;
+
     // Аномальные показания
     final anomalies = pressureReadings.where((r) => r.isAnomaly).toList();
 
@@ -352,7 +383,8 @@ class _StatisticsScreenState extends State<StatisticsScreen> with SingleTickerPr
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildStatCards(
-            avgValue: '${avgSystolic.toStringAsFixed(0)}/${avgDiastolic.toStringAsFixed(0)}',
+            avgValue:
+                '${avgSystolic.toStringAsFixed(0)}/${avgDiastolic.toStringAsFixed(0)}',
             minValue: '-',
             maxValue: '-',
             unit: 'мм рт.ст.',
@@ -373,20 +405,28 @@ class _StatisticsScreenState extends State<StatisticsScreen> with SingleTickerPr
                     ),
                   ),
                   const SizedBox(height: 16),
-                  SizedBox(
-                    height: 250,
-                    child: LineChart(
-                      _buildPressureLineChart(pressureReadings),
-                    ),
+                  _buildChart(
+                    pressureReadings.asMap().entries.map((entry) {
+                      final reading = entry.value;
+                      return FlSpot(
+                        entry.key.toDouble(),
+                        reading.systolicPressure!.toDouble(),
+                      );
+                    }).toList(),
+                    'Систолическое',
+                    Colors.red,
                   ),
                   const SizedBox(height: 8),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      _buildLegendItem('Систолическое', Colors.red),
-                      const SizedBox(width: 16),
-                      _buildLegendItem('Диастолическое', Colors.blue),
-                    ],
+                  _buildChart(
+                    pressureReadings.asMap().entries.map((entry) {
+                      final reading = entry.value;
+                      return FlSpot(
+                        entry.key.toDouble(),
+                        reading.diastolicPressure!.toDouble(),
+                      );
+                    }).toList(),
+                    'Диастолическое',
+                    Colors.blue,
                   ),
                 ],
               ),
@@ -411,10 +451,12 @@ class _StatisticsScreenState extends State<StatisticsScreen> with SingleTickerPr
       return const Center(child: Text('Нет данных за выбранный период'));
     }
 
-    final positionReadings = _filteredReadings.where((r) => r.bodyAngle != null).toList();
-    
+    final positionReadings =
+        _filteredReadings.where((r) => r.bodyAngle != null).toList();
+
     if (positionReadings.isEmpty) {
-      return const Center(child: Text('Нет данных о положении тела за выбранный период'));
+      return const Center(
+          child: Text('Нет данных о положении тела за выбранный период'));
     }
 
     return const Center(
@@ -537,322 +579,70 @@ class _StatisticsScreenState extends State<StatisticsScreen> with SingleTickerPr
     );
   }
 
-  Widget _buildLegendItem(String label, Color color) {
-    return Row(
-      children: [
-        Container(
-          width: 12,
-          height: 12,
-          decoration: BoxDecoration(
-            color: color,
-            shape: BoxShape.circle,
+  Widget _buildChart(List<FlSpot> spots, String label, Color color) {
+    return Container(
+      height: 300,
+      padding: const EdgeInsets.all(16),
+      child: LineChart(
+        LineChartData(
+          gridData: FlGridData(show: true),
+          titlesData: FlTitlesData(
+            leftTitles: AxisTitles(
+              sideTitles: SideTitles(
+                showTitles: true,
+                reservedSize: 40,
+              ),
+            ),
+            bottomTitles: AxisTitles(
+              sideTitles: SideTitles(
+                showTitles: true,
+                reservedSize: 30,
+                interval: spots.length > 10 ? (spots.length / 5).toDouble() : 1,
+                getTitlesWidget: (value, meta) {
+                  if (value.toInt() >= 0 &&
+                      value.toInt() < _filteredReadings.length) {
+                    final date = _filteredReadings[value.toInt()].timestamp;
+                    return Padding(
+                      padding: const EdgeInsets.only(top: 8.0),
+                      child: Text(
+                        _timeRange == 'day'
+                            ? _shortDateFormat.format(date)
+                            : _dateFormat.format(date),
+                        style: TextStyle(
+                          color: AppTheme.textDarkColor,
+                          fontSize: 12,
+                        ),
+                      ),
+                    );
+                  }
+                  return const Text('');
+                },
+              ),
+            ),
+            rightTitles: AxisTitles(
+              sideTitles: SideTitles(showTitles: false),
+            ),
+            topTitles: AxisTitles(
+              sideTitles: SideTitles(showTitles: false),
+            ),
           ),
+          borderData: FlBorderData(show: true),
+          lineBarsData: [
+            LineChartBarData(
+              spots: spots,
+              isCurved: true,
+              color: color,
+              barWidth: 2,
+              dotData: FlDotData(show: true),
+              belowBarData: BarAreaData(
+                show: true,
+                color: color.withOpacity(0.1),
+              ),
+            ),
+          ],
+          lineTouchData: LineTouchData(enabled: false),
         ),
-        const SizedBox(width: 4),
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 12,
-            color: Colors.white70,
-          ),
-        ),
-      ],
+      ),
     );
   }
-
-  LineChartData _buildPulseLineChart(List<DeviceReading> readings) {
-    final spots = readings.asMap().entries.map((entry) {
-      final reading = entry.value;
-      return FlSpot(
-        entry.key.toDouble(),
-        reading.pulseRate!.toDouble(),
-      );
-    }).toList();
-
-    return LineChartData(
-      gridData: FlGridData(
-        show: true,
-        drawVerticalLine: true,
-        getDrawingHorizontalLine: (value) {
-          return FlLine(
-            color: Colors.white10,
-            strokeWidth: 1,
-          );
-        },
-        getDrawingVerticalLine: (value) {
-          return FlLine(
-            color: Colors.white10,
-            strokeWidth: 1,
-          );
-        },
-      ),
-      titlesData: FlTitlesData(
-        bottomTitles: AxisTitles(
-          sideTitles: SideTitles(
-            showTitles: true,
-            reservedSize: 30,
-            getTitlesWidget: (value, meta) {
-              if (value % 5 != 0 && value != spots.length - 1) {
-                return const SizedBox.shrink();
-              }
-              
-              final index = value.toInt();
-              if (index < 0 || index >= readings.length) {
-                return const SizedBox.shrink();
-              }
-
-              final dateFormat = _timeRange == 'day' ? _shortDateFormat : _dateFormat;
-              return Padding(
-                padding: const EdgeInsets.only(top: 8.0),
-                child: Text(
-                  dateFormat.format(readings[index].timestamp),
-                  style: const TextStyle(
-                    color: Colors.white60,
-                    fontSize: 10,
-                  ),
-                ),
-              );
-            },
-          ),
-        ),
-        leftTitles: AxisTitles(
-          sideTitles: SideTitles(
-            showTitles: true,
-            reservedSize: 30,
-            getTitlesWidget: (value, meta) {
-              return Padding(
-                padding: const EdgeInsets.only(right: 8.0),
-                child: Text(
-                  value.toInt().toString(),
-                  style: const TextStyle(
-                    color: Colors.white60,
-                    fontSize: 10,
-                  ),
-                ),
-              );
-            },
-          ),
-        ),
-        topTitles: const AxisTitles(
-          sideTitles: SideTitles(showTitles: false),
-        ),
-        rightTitles: const AxisTitles(
-          sideTitles: SideTitles(showTitles: false),
-        ),
-      ),
-      borderData: FlBorderData(
-        show: true,
-        border: Border.all(color: Colors.white24),
-      ),
-      minX: 0,
-      maxX: spots.length - 1,
-      minY: 0,
-      maxY: 200,
-      lineTouchData: LineTouchData(
-        touchTooltipData: LineTouchTooltipData(
-          tooltipBgColor: Colors.blueGrey.withOpacity(0.8),
-          getTooltipItems: (List<LineBarSpot> touchedSpots) {
-            return touchedSpots.map((spot) {
-              final index = spot.x.toInt();
-              final reading = readings[index];
-              final date = _dateFormat.format(reading.timestamp);
-              
-              return LineTooltipItem(
-                '${reading.pulseRate} уд/мин\n$date',
-                const TextStyle(color: Colors.white),
-              );
-            }).toList();
-          },
-        ),
-      ),
-      lineBarsData: [
-        LineChartBarData(
-          spots: spots,
-          isCurved: true,
-          color: AppTheme.primaryColor,
-          barWidth: 3,
-          isStrokeCapRound: true,
-          dotData: FlDotData(
-            show: true,
-            getDotPainter: (spot, percent, barData, index) {
-              final reading = readings[index];
-              return FlDotCirclePainter(
-                radius: reading.isAnomaly ? 5 : 3,
-                color: reading.isAnomaly ? Colors.red : AppTheme.primaryColor,
-                strokeWidth: 1,
-                strokeColor: Colors.white,
-              );
-            },
-          ),
-          belowBarData: BarAreaData(
-            show: true,
-            color: AppTheme.primaryColor.withOpacity(0.2),
-          ),
-        ),
-      ],
-    );
-  }
-
-  LineChartData _buildPressureLineChart(List<DeviceReading> readings) {
-    final systolicSpots = readings.asMap().entries.map((entry) {
-      final reading = entry.value;
-      return FlSpot(
-        entry.key.toDouble(),
-        reading.systolicPressure!.toDouble(),
-      );
-    }).toList();
-
-    final diastolicSpots = readings.asMap().entries.map((entry) {
-      final reading = entry.value;
-      return FlSpot(
-        entry.key.toDouble(),
-        reading.diastolicPressure!.toDouble(),
-      );
-    }).toList();
-
-    return LineChartData(
-      gridData: FlGridData(
-        show: true,
-        drawVerticalLine: true,
-        getDrawingHorizontalLine: (value) {
-          return FlLine(
-            color: Colors.white10,
-            strokeWidth: 1,
-          );
-        },
-        getDrawingVerticalLine: (value) {
-          return FlLine(
-            color: Colors.white10,
-            strokeWidth: 1,
-          );
-        },
-      ),
-      titlesData: FlTitlesData(
-        bottomTitles: AxisTitles(
-          sideTitles: SideTitles(
-            showTitles: true,
-            reservedSize: 30,
-            getTitlesWidget: (value, meta) {
-              if (value % 5 != 0 && value != systolicSpots.length - 1) {
-                return const SizedBox.shrink();
-              }
-              
-              final index = value.toInt();
-              if (index < 0 || index >= readings.length) {
-                return const SizedBox.shrink();
-              }
-
-              final dateFormat = _timeRange == 'day' ? _shortDateFormat : _dateFormat;
-              return Padding(
-                padding: const EdgeInsets.only(top: 8.0),
-                child: Text(
-                  dateFormat.format(readings[index].timestamp),
-                  style: const TextStyle(
-                    color: Colors.white60,
-                    fontSize: 10,
-                  ),
-                ),
-              );
-            },
-          ),
-        ),
-        leftTitles: AxisTitles(
-          sideTitles: SideTitles(
-            showTitles: true,
-            reservedSize: 30,
-            getTitlesWidget: (value, meta) {
-              return Padding(
-                padding: const EdgeInsets.only(right: 8.0),
-                child: Text(
-                  value.toInt().toString(),
-                  style: const TextStyle(
-                    color: Colors.white60,
-                    fontSize: 10,
-                  ),
-                ),
-              );
-            },
-          ),
-        ),
-        topTitles: const AxisTitles(
-          sideTitles: SideTitles(showTitles: false),
-        ),
-        rightTitles: const AxisTitles(
-          sideTitles: SideTitles(showTitles: false),
-        ),
-      ),
-      borderData: FlBorderData(
-        show: true,
-        border: Border.all(color: Colors.white24),
-      ),
-      minX: 0,
-      maxX: systolicSpots.length - 1,
-      minY: 0,
-      maxY: 200,
-      lineTouchData: LineTouchData(
-        touchTooltipData: LineTouchTooltipData(
-          tooltipBgColor: Colors.blueGrey.withOpacity(0.8),
-          getTooltipItems: (List<LineBarSpot> touchedSpots) {
-            return touchedSpots.map((spot) {
-              final index = spot.x.toInt();
-              final reading = readings[index];
-              final date = _dateFormat.format(reading.timestamp);
-              
-              if (spot.barIndex == 0) {
-                return LineTooltipItem(
-                  'Систолическое: ${reading.systolicPressure} мм рт.ст.\n$date',
-                  const TextStyle(color: Colors.white),
-                );
-              } else {
-                return LineTooltipItem(
-                  'Диастолическое: ${reading.diastolicPressure} мм рт.ст.\n$date',
-                  const TextStyle(color: Colors.white),
-                );
-              }
-            }).toList();
-          },
-        ),
-      ),
-      lineBarsData: [
-        LineChartBarData(
-          spots: systolicSpots,
-          isCurved: true,
-          color: Colors.red,
-          barWidth: 3,
-          isStrokeCapRound: true,
-          dotData: FlDotData(
-            show: true,
-            getDotPainter: (spot, percent, barData, index) {
-              final reading = readings[index];
-              return FlDotCirclePainter(
-                radius: reading.isAnomaly ? 5 : 3,
-                color: reading.isAnomaly ? Colors.redAccent : Colors.red,
-                strokeWidth: 1,
-                strokeColor: Colors.white,
-              );
-            },
-          ),
-        ),
-        LineChartBarData(
-          spots: diastolicSpots,
-          isCurved: true,
-          color: Colors.blue,
-          barWidth: 3,
-          isStrokeCapRound: true,
-          dotData: FlDotData(
-            show: true,
-            getDotPainter: (spot, percent, barData, index) {
-              final reading = readings[index];
-              return FlDotCirclePainter(
-                radius: reading.isAnomaly ? 5 : 3,
-                color: reading.isAnomaly ? Colors.redAccent : Colors.blue,
-                strokeWidth: 1,
-                strokeColor: Colors.white,
-              );
-            },
-          ),
-        ),
-      ],
-    );
-  }
-} 
+}

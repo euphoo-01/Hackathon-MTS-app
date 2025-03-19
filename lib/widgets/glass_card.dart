@@ -11,6 +11,7 @@ class GlassCard extends StatelessWidget {
   final EdgeInsetsGeometry margin;
   final bool hasShadow;
   final Gradient? gradient;
+  final bool expandWidth;
 
   const GlassCard({
     super.key,
@@ -22,12 +23,14 @@ class GlassCard extends StatelessWidget {
     this.margin = EdgeInsets.zero,
     this.hasShadow = false,
     this.gradient,
+    this.expandWidth = true,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
       margin: margin,
+      width: expandWidth ? double.infinity : null,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(borderRadius),
         boxShadow: hasShadow
@@ -44,7 +47,8 @@ class GlassCard extends StatelessWidget {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(borderRadius),
         child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: AppTheme.blurRadius, sigmaY: AppTheme.blurRadius),
+          filter: ImageFilter.blur(
+              sigmaX: AppTheme.blurRadius, sigmaY: AppTheme.blurRadius),
           child: Container(
             padding: padding,
             decoration: BoxDecoration(
@@ -55,7 +59,28 @@ class GlassCard extends StatelessWidget {
                 width: 1.0,
               ),
             ),
-            child: child,
+            child: DefaultTextStyle(
+              style: TextStyle(
+                color: AppTheme.textDarkColor,
+                fontFamily: 'Inter',
+              ),
+              child: Theme(
+                data: Theme.of(context).copyWith(
+                  inputDecorationTheme: InputDecorationTheme(
+                    labelStyle: TextStyle(
+                      color: AppTheme.textDarkColor.withOpacity(0.8),
+                    ),
+                    hintStyle: TextStyle(
+                      color: AppTheme.textDarkColor.withOpacity(0.5),
+                    ),
+                  ),
+                  iconTheme: IconThemeData(
+                    color: AppTheme.textDarkColor,
+                  ),
+                ),
+                child: child,
+              ),
+            ),
           ),
         ),
       ),
@@ -105,4 +130,4 @@ class BentoGridItem extends StatelessWidget {
       );
     }
   }
-} 
+}

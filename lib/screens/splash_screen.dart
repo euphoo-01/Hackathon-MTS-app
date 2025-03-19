@@ -15,11 +15,12 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    
+
     // Проверка авторизации и переход на соответствующий экран
     Future.delayed(const Duration(seconds: 2), () {
-      final authController = Provider.of<AuthController>(context, listen: false);
-      
+      final authController =
+          Provider.of<AuthController>(context, listen: false);
+
       if (authController.isAuthenticated) {
         Navigator.of(context).pushReplacementNamed('/main');
       } else {
@@ -59,7 +60,7 @@ class _SplashScreenState extends State<SplashScreen> {
                 ),
               ),
             ),
-            
+
             Positioned(
               bottom: -150,
               left: -100,
@@ -79,7 +80,7 @@ class _SplashScreenState extends State<SplashScreen> {
                 ),
               ),
             ),
-            
+
             // Основное содержимое
             Center(
               child: Column(
@@ -101,15 +102,18 @@ class _SplashScreenState extends State<SplashScreen> {
                         ),
                       ],
                     ),
-                    child: const Icon(
-                      Icons.monitor_heart_rounded,
-                      size: 80,
-                      color: AppTheme.primaryColor,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(30),
+                      child: Image.asset(
+                        'assets/images/LOGO1024x1024.png',
+                        width: 80,
+                        height: 80,
+                      ),
                     ),
                   ).animate().scale(duration: 800.ms, curve: Curves.elasticOut),
-                  
+
                   const SizedBox(height: 32),
-                  
+
                   // Название приложения
                   Text(
                     'Healarm',
@@ -120,13 +124,29 @@ class _SplashScreenState extends State<SplashScreen> {
                       color: Colors.white,
                     ),
                   ).animate().fade(duration: 600.ms).slideY(
-                    begin: 0.2,
-                    duration: 800.ms,
-                    curve: Curves.easeOutQuart,
-                  ),
-                  
+                        begin: 0.2,
+                        duration: 800.ms,
+                        curve: Curves.easeOutQuart,
+                      ),
+
+                  const SizedBox(height: 8),
+
+                  Text(
+                    'with MTC',
+                    style: const TextStyle(
+                      fontFamily: 'Baloo2',
+                      fontSize: 24,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.white70,
+                    ),
+                  ).animate().fade(delay: 200.ms, duration: 600.ms).slideY(
+                        begin: 0.2,
+                        duration: 800.ms,
+                        curve: Curves.easeOutQuart,
+                      ),
+
                   const SizedBox(height: 16),
-                  
+
                   // Подзаголовок
                   Text(
                     'Мониторинг здоровья',
@@ -137,13 +157,13 @@ class _SplashScreenState extends State<SplashScreen> {
                       color: Colors.white70,
                     ),
                   ).animate(delay: 200.ms).fade(duration: 600.ms).slideY(
-                    begin: 0.2,
-                    duration: 600.ms,
-                    curve: Curves.easeOutQuart,
-                  ),
-                  
+                        begin: 0.2,
+                        duration: 600.ms,
+                        curve: Curves.easeOutQuart,
+                      ),
+
                   const SizedBox(height: 64),
-                  
+
                   // Индикатор загрузки
                   const CircularProgressIndicator(
                     valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
@@ -157,4 +177,4 @@ class _SplashScreenState extends State<SplashScreen> {
       ),
     );
   }
-} 
+}

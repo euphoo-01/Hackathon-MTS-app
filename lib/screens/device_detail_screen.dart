@@ -21,25 +21,27 @@ class DeviceDetailScreen extends StatefulWidget {
   State<DeviceDetailScreen> createState() => _DeviceDetailScreenState();
 }
 
-class _DeviceDetailScreenState extends State<DeviceDetailScreen> with SingleTickerProviderStateMixin {
+class _DeviceDetailScreenState extends State<DeviceDetailScreen>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  
+
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
     _loadDeviceData();
   }
-  
+
   @override
   void dispose() {
     _tabController.dispose();
     super.dispose();
   }
-  
+
   void _loadDeviceData() {
     Future.microtask(() {
-      final deviceController = Provider.of<DeviceController>(context, listen: false);
+      final deviceController =
+          Provider.of<DeviceController>(context, listen: false);
       deviceController.loadDeviceDetails(widget.deviceId);
       deviceController.loadTodayReadings(widget.deviceId);
     });
@@ -70,7 +72,7 @@ class _DeviceDetailScreenState extends State<DeviceDetailScreen> with SingleTick
         return Colors.grey;
     }
   }
-  
+
   // Показываем диалог подтверждения удаления устройства
   void _showDeleteConfirmationDialog(DeviceModel device) {
     showDialog(
@@ -138,14 +140,15 @@ class _DeviceDetailScreenState extends State<DeviceDetailScreen> with SingleTick
       ),
     );
   }
-  
+
   // Удаление устройства
   void _deleteDevice(DeviceModel device) async {
     Navigator.pop(context); // Закрываем диалог
-    
-    final deviceController = Provider.of<DeviceController>(context, listen: false);
+
+    final deviceController =
+        Provider.of<DeviceController>(context, listen: false);
     final success = await deviceController.removeDevice(device.id);
-    
+
     if (success && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -175,29 +178,29 @@ class _DeviceDetailScreenState extends State<DeviceDetailScreen> with SingleTick
     final deviceController = Provider.of<DeviceController>(context);
     final device = deviceController.currentDevice;
     final readings = deviceController.readings;
-    
+
     final size = MediaQuery.of(context).size;
 
     return Scaffold(
-      backgroundColor: AppTheme.backgroundLightColor,
+      backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         title: Text(
           device?.name ?? 'Устройство',
           style: TextStyle(
-            fontFamily: 'Baloo2',
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
             color: AppTheme.primaryColor,
+            fontFamily: 'Baloo2',
+            fontSize: 24,
           ),
         ),
-        iconTheme: const IconThemeData(color: AppTheme.primaryColor),
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back, color: AppTheme.primaryColor),
+          onPressed: () => Navigator.pop(context),
+        ),
         actions: [
-          // Кнопка настроек устройства
           IconButton(
-            icon: const Icon(Icons.settings_outlined),
-            tooltip: 'Настройки устройства',
+            icon: Icon(Icons.settings_outlined, color: AppTheme.primaryColor),
             onPressed: () {
               if (device != null) {
                 Navigator.push(
@@ -209,16 +212,6 @@ class _DeviceDetailScreenState extends State<DeviceDetailScreen> with SingleTick
                     ),
                   ),
                 );
-              }
-            },
-          ),
-          // Кнопка удаления устройства
-          IconButton(
-            icon: const Icon(Icons.delete_outline),
-            tooltip: 'Удалить устройство',
-            onPressed: () {
-              if (device != null) {
-                _showDeleteConfirmationDialog(device);
               }
             },
           ),
@@ -236,907 +229,296 @@ class _DeviceDetailScreenState extends State<DeviceDetailScreen> with SingleTick
                     ),
                   ),
                 )
-              : Stack(
-                  children: [
-                    // Декоративные элементы фона с усиленным размытием
-                    Positioned(
-                      top: -100,
-                      right: -100,
-                      child: Container(
-                        width: 300,
-                        height: 300,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: AppTheme.primaryColor.withOpacity(0.2),
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppTheme.primaryColor.withOpacity(0.1),
-                              blurRadius: 60,
-                              spreadRadius: 20,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    
-                    // Основное содержимое
-                    Column(
-                      children: [
-                        // Карточка статуса
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                          child: GlassCard(
-                            hasShadow: true,
-                            gradient: LinearGradient(
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                              colors: [
-                                device.status == DeviceStatus.normal
-                                    ? AppTheme.successColor.withOpacity(0.8)
-                                    : device.status == DeviceStatus.warning
-                                        ? AppTheme.warningColor.withOpacity(0.8)
-                                        : device.status == DeviceStatus.critical
-                                            ? AppTheme.errorColor.withOpacity(0.8)
-                                            : Colors.grey.withOpacity(0.8),
-                                device.status == DeviceStatus.normal
-                                    ? AppTheme.successColor.withOpacity(0.6)
-                                    : device.status == DeviceStatus.warning
-                                        ? AppTheme.warningColor.withOpacity(0.6)
-                                        : device.status == DeviceStatus.critical
-                                            ? AppTheme.errorColor.withOpacity(0.6)
-                                            : Colors.grey.withOpacity(0.6),
-                              ],
-                            ),
+              : SafeArea(
+                  child: Column(
+                    children: [
+                      // Информация об устройстве
+                      Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: GlassCard(
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   children: [
-                                    Text(
-                                      'Статус устройства',
-                                      style: TextStyle(
-                                        fontFamily: 'Inter',
-                                        fontSize: 16,
-                                        color: Colors.white,
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            device.name,
+                                            style: const TextStyle(
+                                              fontFamily: 'Baloo2',
+                                              fontSize: 24,
+                                              fontWeight: FontWeight.w600,
+                                              color: AppTheme.textColor,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            'ID: ${device.id}',
+                                            style: const TextStyle(
+                                              fontFamily: 'Inter',
+                                              fontSize: 14,
+                                              color: AppTheme.textLightColor,
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                     ),
                                     Container(
                                       padding: const EdgeInsets.symmetric(
                                         horizontal: 12,
-                                        vertical: 4,
+                                        vertical: 6,
                                       ),
                                       decoration: BoxDecoration(
-                                        color: Colors.white.withOpacity(0.2),
-                                        borderRadius: BorderRadius.circular(16),
+                                        color: _getStatusColor(device.status)
+                                            .withOpacity(0.1),
+                                        borderRadius: BorderRadius.circular(20),
                                       ),
-                                      child: Text(
-                                        _getStatusText(device.status),
-                                        style: TextStyle(
-                                          fontFamily: 'Inter',
-                                          fontSize: 14,
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.w500,
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Container(
+                                            width: 8,
+                                            height: 8,
+                                            decoration: BoxDecoration(
+                                              shape: BoxShape.circle,
+                                              color: _getStatusColor(
+                                                  device.status),
+                                            ),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Text(
+                                            _getStatusText(device.status),
+                                            style: TextStyle(
+                                              fontFamily: 'Inter',
+                                              fontSize: 14,
+                                              color: _getStatusColor(
+                                                  device.status),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 16),
+                                const Divider(),
+                                const SizedBox(height: 16),
+                                // Последние показания
+                                if (device.lastReading != null) ...[
+                                  const Text(
+                                    'Последние показания',
+                                    style: TextStyle(
+                                      fontFamily: 'Baloo2',
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w600,
+                                      color: AppTheme.textColor,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 12),
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: _buildReadingCard(
+                                          icon: Icons.favorite_outline,
+                                          title: 'Пульс',
+                                          value:
+                                              '${device.lastReading!.pulseRate}',
+                                          unit: 'уд/мин',
+                                          color: AppTheme.primaryColor,
                                         ),
                                       ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: _buildReadingCard(
+                                          icon: Icons.speed_outlined,
+                                          title: 'Давление',
+                                          value:
+                                              '${device.lastReading!.systolicPressure}/${device.lastReading!.diastolicPressure}',
+                                          unit: 'мм рт.ст.',
+                                          color: AppTheme.accentColor,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 12),
+                                  _buildReadingCard(
+                                    icon: Icons.screen_rotation_outlined,
+                                    title: 'Положение тела',
+                                    value: '${device.lastReading!.bodyAngle}°',
+                                    unit: 'градусов',
+                                    color: AppTheme.successColor,
+                                  ),
+                                ] else
+                                  const Center(
+                                    child: Text(
+                                      'Нет данных',
+                                      style: TextStyle(
+                                        fontFamily: 'Inter',
+                                        fontSize: 16,
+                                        color: AppTheme.textLightColor,
+                                      ),
                                     ),
-                                  ],
-                                ),
-                                
-                                const SizedBox(height: 8),
-                                
-                                const Divider(
-                                  color: Colors.white24,
-                                ),
-                                
-                                const SizedBox(height: 8),
-                                
-                                // Основные показатели
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                                  children: [
-                                    _buildStat(
-                                      icon: Icons.favorite,
-                                      title: 'Пульс',
-                                      value: readings.isNotEmpty && readings.first.pulseRate != null
-                                          ? '${readings.first.pulseRate} уд/мин'
-                                          : 'Н/Д',
-                                      valueColor: readings.isNotEmpty && readings.first.pulseRate != null
-                                          ? readings.first.pulseRate! > 100 || readings.first.pulseRate! < 50
-                                              ? AppTheme.errorColor
-                                              : Colors.white
-                                          : Colors.white,
-                                    ),
-                                    _buildStat(
-                                      icon: Icons.speed,
-                                      title: 'Давление',
-                                      value: readings.isNotEmpty && 
-                                          readings.first.systolicPressure != null &&
-                                          readings.first.diastolicPressure != null
-                                          ? '${readings.first.systolicPressure}/${readings.first.diastolicPressure}'
-                                          : 'Н/Д',
-                                      valueColor: Colors.white,
-                                    ),
-                                    _buildStat(
-                                      icon: Icons.screen_rotation,
-                                      title: 'Наклон',
-                                      value: readings.isNotEmpty && readings.first.bodyAngle != null
-                                          ? '${readings.first.bodyAngle}°'
-                                          : 'Н/Д',
-                                      valueColor: readings.isNotEmpty && readings.first.bodyAngle != null
-                                          ? readings.first.bodyAngle! > 60
-                                              ? AppTheme.errorColor
-                                              : Colors.white
-                                          : Colors.white,
-                                    ),
-                                  ],
-                                ),
+                                  ),
                               ],
                             ),
                           ),
-                        ).animate().fade(duration: 400.ms),
-                        
-                        // Вкладки с данными
-                        TabBar(
-                          controller: _tabController,
-                          tabs: const [
-                            Tab(
-                              text: 'Пульс',
-                              icon: Icon(Icons.favorite_outline),
+                        ),
+                      ),
+
+                      // Кнопки действий
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: ElevatedButton.icon(
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          DeviceSettingsScreen(
+                                        deviceId: device.id,
+                                        initialSettings: device.settings,
+                                      ),
+                                    ),
+                                  );
+                                },
+                                icon: const Icon(Icons.settings_outlined),
+                                label: const Text('Настройки'),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.white,
+                                  foregroundColor: AppTheme.primaryColor,
+                                  elevation: 0,
+                                  side: const BorderSide(
+                                    color: AppTheme.primaryColor,
+                                  ),
+                                ),
+                              ),
                             ),
-                            Tab(
-                              text: 'Давление',
-                              icon: Icon(Icons.speed_outlined),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: ElevatedButton.icon(
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => DeviceStatsScreen(
+                                        deviceId: device.id,
+                                      ),
+                                    ),
+                                  );
+                                },
+                                icon: const Icon(Icons.stacked_line_chart),
+                                label: const Text('Статистика'),
+                              ),
                             ),
                           ],
-                          labelColor: AppTheme.primaryColor,
-                          unselectedLabelColor: AppTheme.textColor,
-                          labelStyle: const TextStyle(
-                            fontFamily: 'Baloo2',
-                            fontWeight: FontWeight.w600,
-                          ),
-                          unselectedLabelStyle: const TextStyle(
-                            fontFamily: 'Baloo2',
-                            fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: ElevatedButton.icon(
+                                onPressed: () {
+                                  _loadDeviceData();
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Данные обновлены'),
+                                      backgroundColor: AppTheme.successColor,
+                                    ),
+                                  );
+                                },
+                                icon: const Icon(Icons.refresh),
+                                label: const Text('Обновить данные'),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppTheme.successColor,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                        child: SizedBox(
+                          width: double.infinity,
+                          child: TextButton.icon(
+                            onPressed: () =>
+                                _showDeleteConfirmationDialog(device),
+                            icon: const Icon(Icons.delete_outline),
+                            label: const Text('Удалить устройство'),
+                            style: TextButton.styleFrom(
+                              foregroundColor: AppTheme.errorColor,
+                            ),
                           ),
                         ),
-                        
-                        // Содержимое вкладок
-                        Expanded(
-                          child: TabBarView(
-                            controller: _tabController,
-                            children: [
-                              // Вкладка пульса
-                              _buildPulseTab(readings, context),
-                              
-                              // Вкладка давления
-                              _buildPressureTab(readings, context),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-      floatingActionButton: device == null
-          ? null
-          : FloatingActionButton.extended(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => DeviceStatsScreen(
-                      deviceId: device.id,
-                    ),
+                      ),
+                    ],
                   ),
-                );
-              },
-              label: const Text(
-                'Детальная статистика',
-                style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontWeight: FontWeight.w500,
                 ),
-              ),
-              icon: const Icon(Icons.analytics_outlined),
-              backgroundColor: AppTheme.primaryColor,
-            ),
     );
   }
-  
-  Widget _buildStat({
+
+  Widget _buildReadingCard({
     required IconData icon,
     required String title,
     required String value,
-    required Color valueColor,
+    required String unit,
+    required Color color,
   }) {
     return Column(
-      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(
-          icon,
-          color: Colors.white,
-          size: 24,
+        Row(
+          children: [
+            Icon(
+              icon,
+              color: color,
+              size: 20,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              title,
+              style: TextStyle(
+                fontFamily: 'Inter',
+                fontSize: 16,
+                color: AppTheme.textColor,
+              ),
+            ),
+          ],
         ),
-        const SizedBox(height: 4),
-        Text(
-          title,
-          style: const TextStyle(
-            fontFamily: 'Inter',
-            fontSize: 12,
-            color: Colors.white70,
-          ),
-        ),
-        const SizedBox(height: 4),
+        const SizedBox(height: 8),
         Text(
           value,
           style: TextStyle(
-            fontFamily: 'Baloo2',
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: valueColor,
+            fontFamily: 'Inter',
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: color,
+          ),
+        ),
+        Text(
+          unit,
+          style: TextStyle(
+            fontFamily: 'Inter',
+            fontSize: 14,
+            color: AppTheme.textLightColor,
           ),
         ),
       ],
     );
   }
-
-  Widget _buildPulseTab(List<DeviceReading> readings, BuildContext context) {
-    final size = MediaQuery.of(context).size;
-    
-    if (readings.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.heart_broken_outlined,
-              size: 64,
-              color: AppTheme.textLightColor.withOpacity(0.5),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Нет данных о пульсе',
-              style: const TextStyle(
-                fontFamily: 'Baloo2',
-                fontSize: 18,
-                color: AppTheme.textColor,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 8),
-            SizedBox(
-              width: size.width * 0.8,
-              child: Text(
-                'Устройство пока не передало данных о пульсе. Проверьте настройки или подождите некоторое время.',
-                style: const TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 14,
-                  color: AppTheme.textLightColor,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-    
-    // Отфильтруем только показания с пульсом
-    final pulseReadings = readings
-        .where((reading) => reading.pulseRate != null)
-        .toList()
-        .reversed
-        .toList();
-    
-    if (pulseReadings.isEmpty) {
-      return Center(
-        child: Text(
-          'Нет данных о пульсе',
-          style: const TextStyle(
-            fontFamily: 'Inter',
-            color: AppTheme.textColor,
-          ),
-        ),
-      );
-    }
-    
-    // Вычисляем мин/макс/средний пульс
-    final minPulse = pulseReadings.map((r) => r.pulseRate!).reduce((a, b) => a < b ? a : b);
-    final maxPulse = pulseReadings.map((r) => r.pulseRate!).reduce((a, b) => a > b ? a : b);
-    final avgPulse = pulseReadings.map((r) => r.pulseRate!).reduce((a, b) => a + b) / pulseReadings.length;
-    
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Статистика пульса
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _buildPulseStatCard(
-                title: 'Мин.',
-                value: minPulse.toInt().toString(),
-                color: minPulse < 50 ? AppTheme.errorColor : AppTheme.primaryColor,
-                icon: Icons.arrow_downward,
-              ),
-              _buildPulseStatCard(
-                title: 'Средн.',
-                value: avgPulse.toInt().toString(),
-                color: AppTheme.primaryColor,
-                icon: Icons.horizontal_rule,
-              ),
-              _buildPulseStatCard(
-                title: 'Макс.',
-                value: maxPulse.toInt().toString(),
-                color: maxPulse > 100 ? AppTheme.errorColor : AppTheme.primaryColor,
-                icon: Icons.arrow_upward,
-              ),
-            ],
-          ),
-          
-          const SizedBox(height: 24),
-          
-          // Заголовок графика
-          Text(
-            'График пульса',
-            style: const TextStyle(
-              fontFamily: 'Baloo2',
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: AppTheme.primaryColor,
-            ),
-          ),
-          
-          const SizedBox(height: 8),
-          
-          Text(
-            'Данные за сегодня',
-            style: const TextStyle(
-              fontFamily: 'Inter',
-              fontSize: 14,
-              color: AppTheme.textLightColor,
-            ),
-          ),
-          
-          const SizedBox(height: 16),
-          
-          // График пульса
-          Expanded(
-            child: LineChart(
-              LineChartData(
-                gridData: FlGridData(
-                  show: true,
-                  drawVerticalLine: false,
-                  horizontalInterval: 20,
-                  getDrawingHorizontalLine: (value) {
-                    return FlLine(
-                      color: AppTheme.textLightColor.withOpacity(0.1),
-                      strokeWidth: 1,
-                    );
-                  },
-                ),
-                titlesData: FlTitlesData(
-                  leftTitles: AxisTitles(
-                    sideTitles: SideTitles(
-                      showTitles: true,
-                      reservedSize: 30,
-                      getTitlesWidget: (value, meta) {
-                        return SideTitleWidget(
-                          axisSide: meta.axisSide,
-                          child: Text(
-                            value.toInt().toString(),
-                            style: TextStyle(
-                              fontFamily: 'Inter',
-                              color: AppTheme.textLightColor,
-                              fontSize: 12,
-                            ),
-                          ),
-                        );
-                      },
-                      interval: 20,
-                    ),
-                  ),
-                  bottomTitles: AxisTitles(
-                    sideTitles: SideTitles(
-                      showTitles: true,
-                      getTitlesWidget: (value, meta) {
-                        if (value.toInt() >= 0 && value.toInt() < pulseReadings.length) {
-                          final reading = pulseReadings[value.toInt()];
-                          return SideTitleWidget(
-                            axisSide: meta.axisSide,
-                            child: Text(
-                              '${reading.timestamp.hour}:${reading.timestamp.minute.toString().padLeft(2, '0')}',
-                              style: TextStyle(
-                                fontFamily: 'Inter',
-                                color: AppTheme.textLightColor,
-                                fontSize: 10,
-                              ),
-                            ),
-                          );
-                        }
-                        return const SizedBox();
-                      },
-                      interval: pulseReadings.length > 5 ? (pulseReadings.length / 5).ceil().toDouble() : 1,
-                    ),
-                  ),
-                  rightTitles: AxisTitles(
-                    sideTitles: SideTitles(showTitles: false),
-                  ),
-                  topTitles: AxisTitles(
-                    sideTitles: SideTitles(showTitles: false),
-                  ),
-                ),
-                borderData: FlBorderData(
-                  show: false,
-                ),
-                minX: 0,
-                maxX: pulseReadings.length.toDouble() - 1,
-                minY: 40,
-                maxY: 140,
-                lineBarsData: [
-                  LineChartBarData(
-                    spots: List.generate(
-                      pulseReadings.length,
-                      (index) => FlSpot(
-                        index.toDouble(),
-                        pulseReadings[index].pulseRate!.toDouble(),
-                      ),
-                    ),
-                    isCurved: true,
-                    color: AppTheme.primaryColor,
-                    barWidth: 3,
-                    isStrokeCapRound: true,
-                    dotData: FlDotData(
-                      show: true,
-                      getDotPainter: (spot, percent, barData, index) {
-                        Color dotColor = AppTheme.primaryColor;
-                        double radius = 4;
-                        
-                        if (pulseReadings[index].pulseRate! > 100 || pulseReadings[index].pulseRate! < 50) {
-                          dotColor = AppTheme.errorColor;
-                          radius = 5;
-                        }
-                        
-                        return FlDotCirclePainter(
-                          radius: radius,
-                          color: dotColor,
-                          strokeWidth: 2,
-                          strokeColor: Colors.white,
-                        );
-                      },
-                    ),
-                    belowBarData: BarAreaData(
-                      show: true,
-                      color: AppTheme.primaryColor.withOpacity(0.2),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPulseStatCard({
-    required String title,
-    required String value,
-    required Color color,
-    required IconData icon,
-  }) {
-    return Container(
-      width: 90,
-      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            spreadRadius: 0,
-          ),
-        ],
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            title,
-            style: const TextStyle(
-              fontFamily: 'Inter',
-              fontSize: 12,
-              color: AppTheme.textLightColor,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                icon,
-                color: color,
-                size: 14,
-              ),
-              const SizedBox(width: 4),
-              Text(
-                value,
-                style: TextStyle(
-                  fontFamily: 'Baloo2',
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: color,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPressureTab(List<DeviceReading> readings, BuildContext context) {
-    final size = MediaQuery.of(context).size;
-    
-    if (readings.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.speed_outlined,
-              size: 64,
-              color: AppTheme.textLightColor.withOpacity(0.5),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Нет данных о давлении',
-              style: const TextStyle(
-                fontFamily: 'Baloo2',
-                fontSize: 18,
-                color: AppTheme.textColor,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 8),
-            SizedBox(
-              width: size.width * 0.8,
-              child: Text(
-                'Устройство пока не передало данных о давлении. Проверьте настройки или подождите некоторое время.',
-                style: const TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 14,
-                  color: AppTheme.textLightColor,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-    
-    // Отфильтруем только показания с данными о давлении
-    final pressureReadings = readings
-        .where((reading) => reading.systolicPressure != null && reading.diastolicPressure != null)
-        .toList()
-        .reversed
-        .toList();
-    
-    if (pressureReadings.isEmpty) {
-      return Center(
-        child: Text(
-          'Нет данных о давлении',
-          style: const TextStyle(
-            fontFamily: 'Inter',
-            color: AppTheme.textColor,
-          ),
-        ),
-      );
-    }
-    
-    // Вычисляем мин/макс/среднее систолическое давление
-    final minSys = pressureReadings.map((r) => r.systolicPressure!).reduce((a, b) => a < b ? a : b);
-    final maxSys = pressureReadings.map((r) => r.systolicPressure!).reduce((a, b) => a > b ? a : b);
-    final avgSys = pressureReadings.map((r) => r.systolicPressure!).reduce((a, b) => a + b) / pressureReadings.length;
-    
-    // Вычисляем мин/макс/среднее диастолическое давление
-    final minDia = pressureReadings.map((r) => r.diastolicPressure!).reduce((a, b) => a < b ? a : b);
-    final maxDia = pressureReadings.map((r) => r.diastolicPressure!).reduce((a, b) => a > b ? a : b);
-    final avgDia = pressureReadings.map((r) => r.diastolicPressure!).reduce((a, b) => a + b) / pressureReadings.length;
-    
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Статистика давления
-          Text(
-            'Систолическое',
-            style: const TextStyle(
-              fontFamily: 'Baloo2',
-              fontSize: 16,
-              fontWeight: FontWeight.w500,
-              color: AppTheme.primaryColor,
-            ),
-          ),
-          
-          const SizedBox(height: 8),
-          
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _buildPulseStatCard(
-                title: 'Мин.',
-                value: minSys.toString(),
-                color: AppTheme.primaryColor,
-                icon: Icons.arrow_downward,
-              ),
-              _buildPulseStatCard(
-                title: 'Средн.',
-                value: avgSys.toInt().toString(),
-                color: AppTheme.primaryColor,
-                icon: Icons.horizontal_rule,
-              ),
-              _buildPulseStatCard(
-                title: 'Макс.',
-                value: maxSys.toString(),
-                color: maxSys > 140 ? AppTheme.errorColor : AppTheme.primaryColor,
-                icon: Icons.arrow_upward,
-              ),
-            ],
-          ),
-          
-          const SizedBox(height: 16),
-          
-          Text(
-            'Диастолическое',
-            style: const TextStyle(
-              fontFamily: 'Baloo2',
-              fontSize: 16,
-              fontWeight: FontWeight.w500,
-              color: AppTheme.accentColor,
-            ),
-          ),
-          
-          const SizedBox(height: 8),
-          
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _buildPulseStatCard(
-                title: 'Мин.',
-                value: minDia.toString(),
-                color: AppTheme.accentColor,
-                icon: Icons.arrow_downward,
-              ),
-              _buildPulseStatCard(
-                title: 'Средн.',
-                value: avgDia.toInt().toString(),
-                color: AppTheme.accentColor,
-                icon: Icons.horizontal_rule,
-              ),
-              _buildPulseStatCard(
-                title: 'Макс.',
-                value: maxDia.toString(),
-                color: maxDia > 90 ? AppTheme.errorColor : AppTheme.accentColor,
-                icon: Icons.arrow_upward,
-              ),
-            ],
-          ),
-          
-          const SizedBox(height: 24),
-          
-          // Заголовок графика
-          Text(
-            'График давления',
-            style: const TextStyle(
-              fontFamily: 'Baloo2',
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: AppTheme.primaryColor,
-            ),
-          ),
-          
-          const SizedBox(height: 8),
-          
-          Text(
-            'Данные за сегодня',
-            style: const TextStyle(
-              fontFamily: 'Inter',
-              fontSize: 14,
-              color: AppTheme.textLightColor,
-            ),
-          ),
-          
-          const SizedBox(height: 16),
-          
-          // График давления
-          Expanded(
-            child: LineChart(
-              LineChartData(
-                gridData: FlGridData(
-                  show: true,
-                  drawVerticalLine: false,
-                  horizontalInterval: 20,
-                  getDrawingHorizontalLine: (value) {
-                    return FlLine(
-                      color: AppTheme.textLightColor.withOpacity(0.1),
-                      strokeWidth: 1,
-                    );
-                  },
-                ),
-                titlesData: FlTitlesData(
-                  leftTitles: AxisTitles(
-                    sideTitles: SideTitles(
-                      showTitles: true,
-                      reservedSize: 30,
-                      getTitlesWidget: (value, meta) {
-                        return SideTitleWidget(
-                          axisSide: meta.axisSide,
-                          child: Text(
-                            value.toInt().toString(),
-                            style: TextStyle(
-                              fontFamily: 'Inter',
-                              color: AppTheme.textLightColor,
-                              fontSize: 12,
-                            ),
-                          ),
-                        );
-                      },
-                      interval: 30,
-                    ),
-                  ),
-                  bottomTitles: AxisTitles(
-                    sideTitles: SideTitles(
-                      showTitles: true,
-                      getTitlesWidget: (value, meta) {
-                        if (value.toInt() >= 0 && value.toInt() < pressureReadings.length) {
-                          final reading = pressureReadings[value.toInt()];
-                          return SideTitleWidget(
-                            axisSide: meta.axisSide,
-                            child: Text(
-                              '${reading.timestamp.hour}:${reading.timestamp.minute.toString().padLeft(2, '0')}',
-                              style: TextStyle(
-                                fontFamily: 'Inter',
-                                color: AppTheme.textLightColor,
-                                fontSize: 10,
-                              ),
-                            ),
-                          );
-                        }
-                        return const SizedBox();
-                      },
-                      interval: pressureReadings.length > 5 ? (pressureReadings.length / 5).ceil().toDouble() : 1,
-                    ),
-                  ),
-                  rightTitles: AxisTitles(
-                    sideTitles: SideTitles(showTitles: false),
-                  ),
-                  topTitles: AxisTitles(
-                    sideTitles: SideTitles(showTitles: false),
-                  ),
-                ),
-                borderData: FlBorderData(
-                  show: false,
-                ),
-                minX: 0,
-                maxX: pressureReadings.length.toDouble() - 1,
-                minY: 40,
-                maxY: 180,
-                lineBarsData: [
-                  // Систолическое давление
-                  LineChartBarData(
-                    spots: List.generate(
-                      pressureReadings.length,
-                      (index) => FlSpot(
-                        index.toDouble(),
-                        pressureReadings[index].systolicPressure!.toDouble(),
-                      ),
-                    ),
-                    isCurved: true,
-                    color: AppTheme.primaryColor,
-                    barWidth: 3,
-                    isStrokeCapRound: true,
-                    dotData: FlDotData(
-                      show: true,
-                      getDotPainter: (spot, percent, barData, index) {
-                        return FlDotCirclePainter(
-                          radius: 4,
-                          color: AppTheme.primaryColor,
-                          strokeWidth: 2,
-                          strokeColor: Colors.white,
-                        );
-                      },
-                    ),
-                    belowBarData: BarAreaData(
-                      show: true,
-                      color: AppTheme.primaryColor.withOpacity(0.1),
-                    ),
-                  ),
-                  
-                  // Диастолическое давление
-                  LineChartBarData(
-                    spots: List.generate(
-                      pressureReadings.length,
-                      (index) => FlSpot(
-                        index.toDouble(),
-                        pressureReadings[index].diastolicPressure!.toDouble(),
-                      ),
-                    ),
-                    isCurved: true,
-                    color: AppTheme.accentColor,
-                    barWidth: 3,
-                    isStrokeCapRound: true,
-                    dotData: FlDotData(
-                      show: true,
-                      getDotPainter: (spot, percent, barData, index) {
-                        return FlDotCirclePainter(
-                          radius: 4,
-                          color: AppTheme.accentColor,
-                          strokeWidth: 2,
-                          strokeColor: Colors.white,
-                        );
-                      },
-                    ),
-                    belowBarData: BarAreaData(
-                      show: true,
-                      color: AppTheme.accentColor.withOpacity(0.1),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          
-          const SizedBox(height: 8),
-          
-          // Легенда
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                width: 10,
-                height: 10,
-                decoration: const BoxDecoration(
-                  color: AppTheme.primaryColor,
-                  shape: BoxShape.circle,
-                ),
-              ),
-              const SizedBox(width: 4),
-              const Text(
-                'Систолическое',
-                style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 12,
-                  color: AppTheme.textColor,
-                ),
-              ),
-              const SizedBox(width: 16),
-              Container(
-                width: 10,
-                height: 10,
-                decoration: const BoxDecoration(
-                  color: AppTheme.accentColor,
-                  shape: BoxShape.circle,
-                ),
-              ),
-              const SizedBox(width: 4),
-              const Text(
-                'Диастолическое',
-                style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 12,
-                  color: AppTheme.textColor,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-} 
+}
